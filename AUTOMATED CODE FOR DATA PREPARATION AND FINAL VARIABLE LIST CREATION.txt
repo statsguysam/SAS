@@ -1,0 +1,344 @@
+
+/*1.	The Code takes care 
+a.	Selecting high IV Variables
+b.	Decides Extreme value Variables
+c.	Cap and Floor extreme value variables
+d.	Decide interaction variables
+e.	Create interaction variables
+f.	Identify non Full Ranked variables
+g.	Retrieve sorted variables List for Full Models execution
+h.	Create Final dataset for Iteration
+
+2.	There is no manual intervention in this code.
+
+3.	Only Manual Input required:
+a.	%let base=SOUBAN.XXXXXX;  /**CHANGE DATASET NAME**/
+b.	%LET iv=souban.iv_XXXXXXX;/**CHANGE IV TABLE NAME**/
+
+4.	Checks for ERRORS also are included .
+Once the code encounters any error it will stop farther execution.
+So it easy to rectify and rerun.
+*/
+
+
+libname  Souban '/sasdata3/SAS_MINING/egusers/souban';
+OPTIONS SYMBOLGEN MLOGIC MPRINT;
+OPTIONS COMPRESS=YES COMPRESS=BINARY;
+
+
+%let base=SOUBAN.KL_VOICE_ARPU_DIU_ABT_FINAL;  /**CHANGE DATASET NAME**/
+%LET iv=Souban.IV_FINAL;/**CHANGE IV TABLE NAME**/
+%let Interaction_data=&base._1;
+
+%MACRO DATAPREP();
+
+data &BASE.;
+set &BASE.;
+format subs_key1 $char50.;
+subs_key1= input(subs_key,$50.);
+run;
+
+proc sort data=&IV;
+by descending iv;
+run;
+
+%if &syserr > 0 %then %do;%goto exit;%end;
+
+proc sql ;
+select distinct var_name FORMAT $CHAR100. into:var SEPARATED BY " "
+from &IV(obs=350);
+run;
+
+proc sql ;
+CREATE Table var_name_POSTIV AS SELECT distinct VAR_NAME FORMAT $CHAR100. 
+from &IV(obs=350);
+run;
+
+%put &var.;
+%if &syserr > 0 %then %do;%goto exit;%end;
+
+proc sort data=&base;by subs_key1;run;
+
+proc transpose data=&base(keep=subs_key1 &var) out=temp;
+  var _numeric_;
+  by subs_key1;
+run;
+
+%if &syserr > 0 %then %do;%goto exit;%end;
+
+proc sort data=temp;by _name_;run;
+
+proc means data=temp noprint ;
+  output out=Univar(rename=(_name_=varname) drop = _type_ _freq_)
+                                P1()=p_1 P99()=P_99 MIN=MIN_ MAX=MAX_;
+  by _name_;
+run;
+
+data Univar1;
+set Univar;
+If P_99=0 then up_limit=0;else up_limit=ABS((Max_-P_99)/P_99);
+if p_1=0 then Low_limit=0;else Low_limit=Abs((p_1-Min_)/p_1);
+Max_limit=Max(up_limit,Low_limit);
+run;
+
+proc sort data=Univar1;
+by descending Max_limit;
+run;
+
+data Univar2(keep=varname);
+set Univar1(obs=100);
+run;
+
+proc sql noprint;
+ select varname,COUNT(varname)
+ into : CAP_LIST separated by ' ', 
+ 	  :COUNT
+ from Univar2;
+quit;
+
+%put &CAP_LIST.;
+
+data &base._1;
+set &base;
+run;
+
+/*%macro Cap_floor();*/
+/**/
+/*%do i = 1 %to &COUNT;*/
+/**/
+/*%let Capvar=%scan(&CAP_LIST.,&i);*/
+/**/
+/*/*proc univariate data=&base;*/*/
+/*/*var &Capvar.;*/*/
+/*/*output out=out_check pctlpts=1 99 pctlpre=P_ ;*/*/
+/*/*run;*/*/
+/**/
+/*data _null_;*/
+/*     set Univar;*/
+/*     call symput('P_99',compress(P_99));*/
+/*	  call symput('P_1',compress(P_1));*/
+/*	  where Varname="&Capvar";*/
+/*   Run;*/
+/**/
+/**/
+/*   %put &P_99.;*/
+/*    %put &P_1.;*/
+/**/
+/**/
+/*data &base._1;*/
+/*set &base._1;*/
+/*if &Capvar.> &P_99. then  &Capvar.= &P_99.;else if &Capvar.=&Capvar.;*/
+/*if &Capvar.< &P_1. then &Capvar.= &P_1.;else if &Capvar.=&Capvar.;*/
+/**/
+/*run;*/
+/*%end;*/
+/**/
+/*%mend ;*/
+/**/
+/*%cap_floor();*/;
+
+%if &syserr > 0 %then %do
+;%goto exit;%end;
+
+/***Interaction Creation***/
+
+data &base._1;
+set &base._1;
+format segment  $char20.;
+if Cust_rev_M2<=50 then Segment="LE50";
+else if 50 <Cust_rev_M2<=150 then Segment="50TO150";
+else if 150<Cust_rev_M2 then Segment="GT150";
+RUN;
+
+PROC FREQ DATA=&base._1;TABLE Segment;RUN;
+
+
+PROC MEANS DATA=&Interaction_data. N NMISS MIN MAX mean stddev  ;
+class segment;
+output out=test;
+RUN;
+
+proc transpose data=test out=test1;
+id _STAT_ segment;
+run;
+
+data test2(keep=_Name_ MEANGT150 MEAN50to150 MEANLE50 STDGT150 STD50to150 STDLE50);
+set test1;run;
+
+data test3;
+set test2;
+MeanCNG1=(MEANGT150-MEAN50to150)/MEAN50to150;
+MeanCNG2=(MEAN50to150-MEANLE50)/MEANLE50;
+MeanCNG3=(MEANGT150-MEANLE50)/MEANLE50;
+STDCNG1=(STDGT150-STD50to150)/STD50to150;
+STDCNG2=(STD50to150-STDLE50)/STDLE50;
+STDCNG3=(STDGT150-STDLE50)/STDLE50;
+run;
+
+PROC MEANS DATA=TEST3 MIN P10 P25 P50 P75 P90 MAX;
+VAR MeanCNG1 MeanCNG2 MeanCNG3 STDCNG1 STDCNG2;
+OUTPUT OUT= TEST4;
+RUN;
+
+
+%LET VAR=
+MeanCNG1
+MeanCNG2
+MeanCNG3;
+
+
+DATA percentile;
+SET _NULL_;
+FORMAT varname  $CHAR100. p_95 BEST30. ;
+RUN;
+
+%macro Univar();
+
+%do i = 1 %to 3;
+
+%let Capvar=%scan(&var.,&i);
+
+proc univariate data=TEST3;
+var &Capvar.;
+output out=out_check pctlpts=95 pctlpre=P_ ;
+run;
+
+data _null_;
+     set out_check;
+     call symput('P_95',compress(P_95));
+        run;
+
+%put &P_95.;
+
+data percentile1;
+set out_check;
+varname="&Capvar.";
+p_1=&P_95.;
+run;
+
+proc append base=percentile data=percentile1 force;
+run;
+%end;
+%mend;
+
+%Univar ();
+
+proc sql;
+select P_95 into :MEANCNG1_P95 from percentile WHERE VARNAME="MeanCNG1";
+select P_95 into :MEANCNG2_P95 from percentile WHERE VARNAME="MeanCNG2";
+select P_95 into :MEANCNG3_P95 from percentile WHERE VARNAME="MeanCNG3";
+
+QUIT;
+
+DATA TEST4(keep=_NAME_);
+SET TEST3;
+WHERE MeanCNG1>&MEANCNG1_P95. OR MeanCNG2 > &MEANCNG2_P95. OR MeanCNG3 > &MEANCNG3_P95.;
+if _name_ = "_FREQ_" then delete;
+RUN;
+
+proc sql;
+create table TEST5 AS SELECT _NAME_ FROM TEST4
+WHERE _NAME_ IN (SELECT var_name FROM var_name_POSTIV);
+QUIT;
+
+
+Data test6;
+set test5;
+NAME1=CATX("_",_NAME_,1);
+NAME2=CATX("_",_NAME_,2);
+NAME3=CATX("_",_NAME_,3);
+run;
+
+
+proc sql noprint;
+ select _name_,NAME1,NAME2,NAME3,COUNT(_NAME_)
+ into : Interaction_varlist separated by ' ', 
+ 	  :Interaction_varlist_1 separated by ' ',
+	  : Interaction_varlist_2 separated by ' ',
+	  : Interaction_varlist_3 separated by ' ',
+      :COUNT
+ from TEST6;
+quit;
+
+%if &syserr > 0 %then %do;%goto exit;%end;
+%put &Interaction_varlist;
+%put &Interaction_varlist_2;
+%PUT &COUNT;
+
+data &Interaction_data._1;
+set &Interaction_data.;
+array var[&COUNT]
+&Interaction_varlist.;
+
+array var_1[&COUNT]
+&Interaction_varlist_1.;
+
+array var_2[&COUNT]
+&Interaction_varlist_2.;
+
+array var_3[&COUNT]
+&Interaction_varlist_3.;
+
+
+do i =1 to &COUNT;
+if segment="LE50" then var_1[i]=var[i]; else  var_1[i]=0;
+if segment="50TO150" then var_2[i]=var[i] ;else  var_2[i]=0;
+if segment="GT150" then var_3[i]=var[i] ;else  var_3[i]=0;
+end;
+run;
+
+%if &syserr > 0 %then %do;%goto exit;%end;
+/***FULL RANK ***/
+
+proc sql;
+CREATE TABLE new_list AS select var_name 
+ from VAR_NAME_POSTIV where var_name not in (select _NAME_ from TEST6);
+quit;
+
+DATA NAME1(KEEP=NAME1 RENAME=(NAME1=VAR_NAME));
+SET TEST6;
+RUN;
+
+DATA NAME2(KEEP=NAME2 RENAME=(NAME2=VAR_NAME));
+SET TEST6;
+RUN;
+
+DATA NAME3(KEEP=NAME3 RENAME=(NAME3=VAR_NAME));
+SET TEST6;
+RUN;
+
+DATA NEW_LIST1;
+SET new_list NAME1 NAME2 NAME3;
+RUN;
+
+PROC SQL;
+SELECT VAR_NAME INTO:new_list SEPARATED BY " " FROM NEW_LIST1;
+RUN;
+
+/*libname  Souban '/sasdata3/SAS_MINING/egusers/souban';*/
+
+%LET VARLIST=&new_list.;
+
+/* PROC Regression program to know Colliearity statistics, Condition Index,  and VIF  */
+
+PROC REG DATA=&&Interaction_data._1 OUTEST=OUT_ESTIMATE;
+MODEL TARGET = &VARLIST /VIF COLLIN;
+RUN;
+
+PROC TRANSPOSE DATA=OUT_ESTIMATE OUT=OUT_ESTIMATE_TRNPS;
+RUN;
+
+DATA OUT_ESTIMATE_TRNPS1(KEEP=_NAME_);
+SET OUT_ESTIMATE_TRNPS;
+WHERE COL1 ne 0 AND _NAME_ NOT IN ("_RMSE_","Intercept","TARGET");
+RUN;
+
+Proc sql;
+select _NAME_ from OUT_ESTIMATE_TRNPS1;quit;
+
+
+%exit:
+
+%MEND DATAPREP;
+
+%DATAPREP ();

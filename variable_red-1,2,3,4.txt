@@ -1,0 +1,840 @@
+
+libname sshikh'/sasdata3/SAS_MINING/egusers/sshikh';
+
+%let abt=DATA_DIU_TN_ABT_ALL_FINAL_4;
+
+/* ABT stored in sshikh.&abt. */
+/* Stores the variables after Fine Classing */
+
+data sshikh.VARLIST_FULL;
+   input varname $char50.;
+   datalines;
+SUM_USG_MB_M2
+CHG_USG_MB_L7_M2
+CHG_USG_MB_L5_M2
+CHG_USG_MB_F15M2_L15M2
+MAX_USG_MB_L7
+SD_USG_MB_L15
+SLP_USG_MB_L15
+SD_USG_MB_4DB_L36
+SD_USG_MB_3DB_L30
+SD_USG_MB_5DB_L45
+SD_USG_MB_7DB_L28
+SD_USG_MB_10DB_L60
+SLP_USG_MB_3DB_L60
+SUM_USG_MB_ALL_3G_L5
+CHG_USG_MB_ALL_3G_L7_M2
+CHG_USG_MB_ALL_3G_L5_M2
+CHG_USG_MB_ALL_3G_F15M2_L15M2
+SLP_USG_MB_ALL_3G_L30
+SLP_USG_MB_ALL_3G_L15
+SLP_USG_MB_ALL_3G_L67
+SUM_USG_MB_ALL_2G_L5
+CHG_USG_MB_ALL_2G_L7_M2
+CHG_USG_MB_ALL_2G_L5_M2
+CHG_USG_MB_ALL_2G_F15M2_L15M2
+SLP_USG_MB_ALL_2G_L30
+SLP_USG_MB_ALL_2G_L15
+SLP_USG_MB_ALL_2G_L67
+CHG_USG_MB_ALL_4G_F15M2_L15M2
+SUM_DATA_REV_L5
+SUM_DATA_REV_L7
+SUM_DATA_REV_M1
+CHG_DATA_REV_L5_M2
+CHG_DATA_REV_F15M2_L15M2
+SLP_DATA_REV_L15
+SLP_DATA_REV_L67
+SD_DATA_REV_5DB_L45
+SD_DATA_REV_7DB_L28
+SLP_DATA_REV_3DB_L60
+SUM_DATA_REV_ALL_3G_L5
+SUM_DATA_REV_ALL_3G_L7
+SUM_DATA_REV_ALL_3G_L21
+SUM_DATA_REV_ALL_3G_M1
+CHG_DATA_REV_ALL_3G_L7_M2
+CHG_DATA_REV_ALL_3G_L5_M2
+CHG_DATA_REV_ALL_3G_F15M2_L15M2
+SLP_DATA_REV_ALL_3G_L30
+SLP_DATA_REV_ALL_3G_L15
+SLP_DATA_REV_ALL_3G_L67
+SUM_DATA_REV_ALL_2G_L5
+SUM_DATA_REV_ALL_2G_L7
+SUM_DATA_REV_ALL_2G_L21
+SUM_DATA_REV_ALL_2G_M1
+CHG_DATA_REV_ALL_2G_L7_M2
+CHG_DATA_REV_ALL_2G_L5_M2
+CHG_DATA_REV_ALL_2G_F15M2_L15M2
+MAX_DATA_REV_ALL_2G_L7
+SLP_DATA_REV_ALL_2G_L30
+SLP_DATA_REV_ALL_2G_L15
+SLP_DATA_REV_ALL_2G_L67
+CHG_DATA_REV_ALL_4G_L7_M2
+CHG_DATA_REV_ALL_4G_L5_M2
+CHG_DATA_REV_ALL_4G_F15M2_L15M2
+CHG_DATA_TOT_DUR_L7_M2
+CHG_DATA_TOT_DUR_L5_M2
+CHG_DATA_TOT_DUR_F15M2_L15M2
+SLP_DATA_TOT_DUR_L30
+SLP_DATA_TOT_DUR_L15
+SLP_DATA_TOT_DUR_L37
+CHG_DATA_DUR_ALL_2G_L7_M2
+CHG_DATA_DUR_ALL_2G_L5_M2
+CHG_DATA_DUR_ALL_2G_F15M2_L15M2
+SLP_DATA_DUR_ALL_2G_L30
+SLP_DATA_DUR_ALL_2G_L15
+SLP_DATA_DUR_ALL_2G_L37
+SUM_DATA_DUR_ALL_3G_L5
+CHG_DATA_DUR_ALL_3G_F15M2_L15M2
+SD_DATA_DUR_ALL_3G_L7
+SD_DATA_DUR_ALL_3G_L15
+SLP_DATA_DUR_ALL_3G_L30
+SLP_DATA_DUR_ALL_3G_L15
+SLP_DATA_DUR_ALL_3G_L67
+CHG_DATA_DUR_ALL_4G_F15M2_L15M2
+CHG_DATA_CNT_SSN_L7_M2
+CHG_DATA_CNT_SSN_L5_M2
+CHG_DATA_CNT_SSN_F15M2_L15M2
+SD_DATA_CNT_SSN_L7
+MAX_DATA_CNT_SSN_L15
+SD_DATA_CNT_SSN_L15
+SLP_DATA_CNT_SSN_L30
+SLP_DATA_CNT_SSN_L15
+SLP_DATA_CNT_SSN_L67
+PROP_HOME_USG_TOT_USG_2G_L30
+PROP_HOME_USG_TOT_USG_3G_L30
+PROP_HOME_USG_TOT_USG_2G_L37
+PROP_HOME_USG_TOT_USG_3G_L37
+PROP_HOME_REV_TOT_REV_3G_L30
+PROP_3G_REV_TOT_REV_L30
+PROP_HOME_REV_TOT_REV_3G_L37
+PROP_NIG_USG_TOT_USG_MB_30
+PROP_NIG_USG_TOT_USG_MB_37
+RAT_DATA_REV_TOT_MB_L7
+RAT_DATA_REV_TOT_MB_L15
+RAT_DATA_REV_TOT_MB_L30
+RAT_DATA_REV_TOT_MB_L37
+RAT_DATA_REV_TOT_MB_L67
+AVG_RCH_VAL_L7_DATA
+DLY_AVG_RCH_VAL_L7_DATA
+AVG_RCH_VAL_L15_DATA
+DLY_AVG_RCH_VAL_L15_DATA
+AVG_RCH_VAL_L30_DATA
+AVG_RCH_VAL_L37_DATA
+AVG_RCH_VAL_L67_DATA
+DLY_AVG_RCH_VAL_L67_DATA
+CNT_RCH_VAL_GT_50_L7_DATA
+CNT_RCH_VAL_GT_50_L15_DATA
+CNT_RCH_VAL_GT_50_L37_DATA
+CNT_RCH_VAL_GT_100_L7_DATA
+CNT_RCH_VAL_GT_100_L15_DATA
+CNT_RCH_VAL_GT_100_L30_DATA
+CNT_RCH_VAL_GT_100_L37_DATA
+CNT_DATA_COMPLNT_INS_L7
+CNT_DATA_COMPLNT_INS_L15
+CNT_DATA_COMPLNT_INS_L30
+CNT_DATA_COMPLNT_INS_L67
+CNT_DATA_INS_L7
+CNT_DATA_INS_L15
+CNT_DATA_INS_L37
+CNT_DATA_INS_L67
+PROP_MB_MAX_LAC_CELL_TOT_MB_L15
+PROP_MB_MAX_LAC_CELL_TOT_MB_L30
+PROP_MB_MAX_LAC_CELL_TOT_MB_L37
+PROP_MB_MAX_LAC_CELL_TOT_MB_L67
+CNT_DAY_NO_DATA_L30
+AVG_CNT_DAY_NO_DATA_L30
+RAT_MAX_CNT_DAY_NO_DATA_L30
+CNT_DAY_NO_DATA_L67
+AVG_CNT_DAY_NO_DATA_L67
+MAX_CNT_DAY_NO_DATA_L67
+RAT_MAX_CNT_DAY_NO_DATA_L67
+PROP_WKDAY_USG_TOT_USG_MB_L28
+RAT_WKD_WKE_USG_MB_L28
+RAT_WKD_WKE_USG_MB_L35
+RAT_WKD_WKE_USG_MB_L37
+PROP_WKDAY_USG_TOT_USG_MB_L67
+RAT_WKD_WKE_USG_MB_L67
+PROP_WKDAY_USG_TOT_USG_3G_L28
+PROP_WKEND_USG_TOT_USG_3G_L28
+RAT_WKD_WKE_3G_USG_MB_L28
+PROP_WKDAY_USG_TOT_USG_3G_L35
+PROP_WKDAY_USG_TOT_USG_3G_L37
+WKEND_AVG_3G_USG_MB_L67
+PROP_WKDAY_USG_TOT_USG_3G_L67
+PROP_WKEND_USG_TOT_USG_3G_L67
+RAT_WKD_WKE_3G_USG_MB_L67
+PROP_WKDAY_USG_TOT_USG_2G_L28
+PROP_WKEND_USG_TOT_USG_2G_L28
+RAT_WKD_WKE_2G_USG_MB_L28
+RAT_WKD_WKE_2G_USG_MB_L35
+RAT_WKD_WKE_2G_USG_MB_L37
+WKEND_AVG_2G_USG_MB_L67
+PROP_WKDAY_USG_TOT_USG_2G_L67
+PROP_WKEND_USG_TOT_USG_2G_L67
+RAT_WKD_WKE_2G_USG_MB_L67
+WKEND_AVG_DATA_REV_L28
+RAT_WKD_WKE_DATA_REV_L28
+WKEND_AVG_DATA_REV_L35
+WKEND_AVG_DATA_REV_L67
+PROP_WKDAY_REV_TOT_DATA_REV_L67
+PROP_WKEND_REV_TOT_DATA_REV_L67
+RAT_WKD_WKE_DATA_REV_L67
+WKEND_AVG_3G_REV_L28
+WKDAY_AVG_3G_REV_L28
+PROP_WKDAY_REV_TOT_REV_3G_L28
+PROP_WKEND_REV_TOT_REV_3G_L28
+RAT_WKD_WKE_3G_REV_L28
+WKEND_AVG_3G_REV_L35
+WKDAY_AVG_3G_REV_L35
+PROP_WKDAY_REV_TOT_REV_3G_L35
+PROP_WKDAY_REV_TOT_REV_3G_L37
+WKEND_AVG_3G_REV_L67
+PROP_WKDAY_REV_TOT_REV_3G_L67
+PROP_WKEND_REV_TOT_REV_3G_L67
+RAT_WKD_WKE_3G_REV_L67
+WKEND_AVG_2G_REV_L28
+WKDAY_AVG_2G_REV_L28
+PROP_WKDAY_REV_TOT_REV_2G_L28
+PROP_WKEND_REV_TOT_REV_2G_L28
+RAT_WKD_WKE_2G_REV_L28
+WKEND_AVG_2G_REV_L35
+WKDAY_AVG_2G_REV_L35
+WKEND_AVG_2G_REV_L67
+PROP_WKDAY_REV_TOT_REV_2G_L67
+PROP_WKEND_REV_TOT_REV_2G_L67
+RAT_WKD_WKE_2G_REV_L67
+PROP_WKDAY_REV_TOT_REV_4G_L28
+RAT_WKD_WKE_4G_REV_L28
+PROP_WKDAY_REV_TOT_REV_4G_L67
+PROP_WKEND_REV_TOT_REV_4G_L67
+RAT_WKD_WKE_4G_REV_L67
+MAX_CNT_DAY_NO_DATA_RCH_L67
+AVG_CNT_DAY_NO_DATA_RCH_L67
+TOT_CNT_DAY_NO_DATA_RCH_L67
+SUM_RTD_MOU_M1
+RAT_RTD_MOU_M1_M2
+SUM_RTD_MOU_M2D24_M2D30
+CHG_RTD_MOU_L7_M2D24M2D30
+CHG_RTD_MOU_L15_M2D8M2D22
+CHG_RTD_MOU_L7_M2
+SD_RTD_MOU_L4
+SLP_RTD_MOU_L7
+SLP_RTD_MOU_L15
+SLP_RTD_MOU_M2
+SD_RTD_MOU_4DB_L36
+SD_RTD_MOU_3DB_L36
+SUM_REV_L15
+SUM_REV_L30
+SUM_REV_M1
+RAT_REV_M1_M2
+RAT_REV_L7_L37
+RAT_REV_L15_L37
+RAT_REV_L21_L37
+SUM_REV_L21
+SUM_REV_M2D24_M2D30
+CHG_REV_L7_M2D24M2D30
+CHG_REV_L15_M2D8M2D22
+CHG_REV_L7_M2
+SLP_REV_L7
+SLP_REV_L15
+SD_MBL_L4
+SD_MBL_L7
+SD_MBL_L15
+SLP_MBL_L7
+SLP_MBL_L15
+SLP_MBL_M2
+CNT_RMG_INS_L4
+CNT_RMG_INS_L7
+CNT_RMG_INS_L14
+CNT_RMG_INS_M2
+AVG_RCH_VAL_L37
+AVG_RCH_VAL_L67
+CNT_RCH_VAL_GT_30_L7
+CNT_RCH_VAL_GT_30_L15
+CNT_RCH_VAL_GT_30_L37
+CNT_RCH_VAL_GT_50_L7
+CNT_RCH_VAL_GT_50_L15
+CNT_RCH_VAL_GT_50_L37
+CNT_RCH_VAL_GT_100_L7
+CNT_RCH_VAL_GT_100_L15
+CNT_RCH_VAL_GT_100_L37
+DS_RCH_L67
+JIO_OTP
+upgrade_tag
+downgrade_tag
+SUM_USG_MB_M2_1
+CHG_USG_MB_L7_M2_1
+CHG_USG_MB_F15M2_L15M2_1
+MAX_USG_MB_L7_1
+SD_USG_MB_L15_1
+SLP_USG_MB_L15_1
+SD_USG_MB_4DB_L36_1
+SD_USG_MB_3DB_L30_1
+SD_USG_MB_5DB_L45_1
+SD_USG_MB_7DB_L28_1
+SD_USG_MB_10DB_L60_1
+SLP_USG_MB_3DB_L60_1
+SLP_USG_MB_ALL_3G_L15_1
+CHG_USG_MB_ALL_4G_F15M2_L15M2_1
+SLP_DATA_REV_ALL_3G_L30_1
+RAT_WKD_WKE_USG_MB_L28_1
+RAT_WKD_WKE_2G_USG_MB_L28_1
+RAT_WKD_WKE_2G_USG_MB_L35_1
+RAT_WKD_WKE_2G_USG_MB_L37_1
+RAT_WKD_WKE_2G_USG_MB_L67_1
+PROP_WKDAY_REV_TOT_REV_4G_L28_1
+PROP_WKDAY_REV_TOT_REV_4G_L67_1
+PROP_WKEND_REV_TOT_REV_4G_L67_1
+SLP_RTD_MOU_L7_1
+RAT_REV_M1_M2_1
+RAT_REV_L7_L37_1
+SUM_USG_MB_M2_2
+CHG_USG_MB_L7_M2_2
+CHG_USG_MB_F15M2_L15M2_2
+MAX_USG_MB_L7_2
+SD_USG_MB_L15_2
+SLP_USG_MB_L15_2
+SD_USG_MB_4DB_L36_2
+SD_USG_MB_3DB_L30_2
+SD_USG_MB_5DB_L45_2
+SD_USG_MB_7DB_L28_2
+SD_USG_MB_10DB_L60_2
+SLP_USG_MB_3DB_L60_2
+SLP_USG_MB_ALL_3G_L15_2
+CHG_USG_MB_ALL_4G_F15M2_L15M2_2
+SLP_DATA_REV_ALL_3G_L30_2
+RAT_WKD_WKE_USG_MB_L28_2
+RAT_WKD_WKE_2G_USG_MB_L28_2
+RAT_WKD_WKE_2G_USG_MB_L35_2
+RAT_WKD_WKE_2G_USG_MB_L37_2
+RAT_WKD_WKE_2G_USG_MB_L67_2
+PROP_WKDAY_REV_TOT_REV_4G_L28_2
+PROP_WKDAY_REV_TOT_REV_4G_L67_2
+PROP_WKEND_REV_TOT_REV_4G_L67_2
+SLP_RTD_MOU_L7_2
+RAT_REV_M1_M2_2
+RAT_REV_L7_L37_2
+;run;
+
+
+
+/*FIRST PROCEDURE*/
+
+
+proc sql;
+select count(*) into:num from sshikh.VARLIST_FULL;
+run;
+
+%LET vif_cap = 10;
+
+
+options  mprint mlogic symbolgen;
+
+%macro vif();
+
+%do %until (&Average_VIF < 200);
+
+proc sql;
+select varname into :rest separated by " " from  sshikh.VARLIST_FULL;
+quit;
+
+PROC REG DATA=sshikh.&abt.(keep=target &rest);
+ods output parameterestimates = reg_est(where=(variable<>"Intercept"));
+MODEL TARGET = &rest /VIF COLLIN;
+RUN;
+
+/*ADD THIS PATCH*/
+
+data reg_est;
+set reg_est;
+if varianceinflation in (.) then varianceinflation=10000000;
+run;
+
+proc sql;
+create table VIF_BUF4 as select Variable, VarianceInflation, Max(VarianceInflation) AS Max_VIF, AVG(VarianceInflation) AS Avg_VIF from reg_est;
+quit;
+
+proc sql;
+select Avg_VIF into :Average_VIF from  VIF_BUF4 WHERE monotonic()=1;
+quit;
+
+%PUT &Average_VIF;
+
+%if (&num > 300) %then %do;
+%let limit = 15;
+%end;
+%else %if (&num > 200) %then %do;
+%let limit = 2;
+%end;
+%else %if (&num > 150) %then %do;
+%let limit = 1;
+%end;
+%else %do;
+%let limit = 1;
+%end ;
+
+%do i=1 %to &limit;
+	
+	/* selecting variable with max VIF  */
+
+	proc sql;
+		create table sshikh.VARLIST_FULL as select Variable as varname, VarianceInflation from VIF_BUF4
+			where VarianceInflation ne Max_VIF order by VarianceInflation;
+	quit;
+
+	
+	proc sql;
+		create table VIF_BUF4 as select varname as Variable, VarianceInflation, Max(VarianceInflation) AS Max_VIF from sshikh.VARLIST_FULL;
+	quit;
+
+%end;
+
+
+proc sql;
+select count(*) into:num from sshikh.VARLIST_FULL;
+run;
+
+%end;
+
+%mend vif;
+
+%vif();
+
+ 
+proc sql;
+create table sshikh.VARLIST_PROCEDURE_1 as select * from sshikh.VARLIST_FULL where monotonic()<=250;
+quit;
+
+
+
+
+
+
+
+
+
+
+/*procedure 2,3 &4*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+proc sql;
+create table sshikh.VARLIST_FULL as select * from sshikh.VARLIST_PROCEDURE_1;
+quit;
+
+
+
+
+/*SECOND PROCEDURE*/
+
+
+
+proc sql;
+select varname into :rest seperated by " " from  sshikh.VARLIST_PROCEDURE_1;
+quit;
+
+PROC REG DATA=sshikh.&abt.;
+ods output parameterestimates = reg_est(where=(variable<>"Intercept"));
+MODEL TARGET = &rest /VIF COLLIN;
+RUN;
+
+proc sql;
+create table sshikh.VARLIST_FULL as select Variable as varname, VarianceInflation  from reg_est order by VarianceInflation;
+quit;
+
+
+proc sql;
+create table sshikh.VARLIST_FULL_BUFFER as select *  from sshikh.VARLIST_FULL order by VarianceInflation;
+quit;
+
+
+
+DATA sshikh.VARLIST_NEW;
+SET _NULL_;
+FORMAT _NAME_  $CHAR100. ABSOLUTE BEST30.  BIN_ID BEST10. BIN_SIZE BEST10.;
+RUN;
+
+
+
+%macro partial_corr(j);
+DATA sshikh.PARTIAL_CORR;
+SET _NULL_;
+FORMAT _NAME_  $CHAR100. TARGET BEST30.;
+RUN;
+
+
+proc sql;
+select count(*) into :num from sshikh.VIF_BIN1 ;
+quit;
+
+%do i=1 %to &num;
+
+
+proc sql;
+select Variable into :mainvar from sshikh.VIF_BIN1 where monotonic()=&i.;
+quit;
+
+%put &mainvar;
+
+%let rest=;
+%put &rest.;
+
+%if (&num > 1) %then %do;
+
+proc sql;
+select Variable into :rest seperated by " " from  sshikh.VIF_BIN1 where Variable <> "&mainvar";
+quit;
+
+%end;
+
+%put &mainvar;
+%put &rest;
+
+PROC CORR DATA=sshikh.&abt. NOPROB nosimple nomiss outp=CorrOutp;
+var target &mainvar.;
+partial &rest.;
+RUN;
+
+proc sql;
+create table INDI_CORR as select _NAME_,TARGET FROM CorrOutp WHERE _TYPE_="CORR" AND _NAME_="&mainvar";
+RUN;
+
+
+
+PROC APPEND BASE=sshikh.PARTIAL_CORR DATA=INDI_CORR FORCE ;
+
+%end;
+
+
+DATA PARTIAL_NEW_CORR;
+SET sshikh.PARTIAL_CORR;
+Absolute = ABS(TARGET);
+Run;
+
+proc sql;
+create table sshikh.PARTIAL_CORR  as select * from PARTIAL_NEW_CORR where Absolute > 0 order by Absolute;
+quit;
+
+
+%let limit_select = 0;
+
+%put &limit_select.;
+
+proc sql;
+create table sshikh.VARLIST_LEFT as select _NAME_,ABSOLUTE from sshikh.PARTIAL_CORR where monotonic()> &limit_select. order by ABSOLUTE;
+quit;
+
+DATA Selected_Var;
+set sshikh.VARLIST_LEFT;
+Bin_ID = %eval(&j.);
+Bin_Size = %eval(&num.);
+run;
+
+proc sql;
+create table bin_stat_&j. as select * from sshikh.VARLIST_LEFT where monotonic()> &limit_select.;
+quit;
+
+PROC APPEND BASE=sshikh.VARLIST_NEW DATA=Selected_Var  FORCE;
+
+
+
+%mend partial_corr;
+
+
+proc sql;
+create table sshikh.VARLIST_FULL as select *  from sshikh.VARLIST_FULL_BUFFER order by VarianceInflation;
+quit;
+
+
+%macro form_bins();
+
+proc sql;
+select count(*) into:num_var from sshikh.VARLIST_FULL;
+run;
+
+proc sql;
+create table dummy_count as select varname from sshikh.VARLIST_FULL where monotonic() = 1;
+run;
+
+proc sql;
+select count(*) into:count_iter from dummy_count;
+run;
+
+%do %until (&num_var < 1);
+
+%LET i = &count_iter;
+
+%LET num_limit = 1;
+
+proc sql;
+create table sshikh.VARLIST_FULL_1 as select * from sshikh.VARLIST_FULL where monotonic()>&num_limit.;
+quit;
+
+proc sql;
+select varname into :rest seperated by " " from  sshikh.VARLIST_FULL_1;
+quit;
+
+PROC REG DATA=sshikh.&abt.;
+ods output parameterestimates = reg_est(where=(variable<>"Intercept"));
+MODEL TARGET = &rest /VIF COLLIN;
+RUN;
+
+proc sql;
+create table VIF_BUF as select Variable, VarianceInflation as VIF_NEW from reg_est order by VarianceInflation;
+quit;
+
+
+ proc sql;
+		create table VIF_CHECK as select Variable, VarianceInflation, VIF_NEW
+  			FROM VIF_BUF INNER JOIN  sshikh.VARLIST_FULL
+    		ON Variable = varname;
+ quit;
+
+
+ proc sql;
+   create table sshikh.VIF_BIN1 as select Variable length=50, VIF_NEW
+  		FROM VIF_CHECK  WHERE ((VarianceInflation-VIF_NEW)/VarianceInflation) >= 0.05 order by VIF_NEW;
+ quit;
+
+proc sql;
+select count(*) into:num_left from sshikh.VIF_BIN1 ;
+run;
+
+
+%if (&num_left = 0) %then %do;
+
+proc sql;
+   create table sshikh.VIF_BIN1 as select varname length=50 as Variable, VarianceInflation
+  		FROM sshikh.VARLIST_FULL where monotonic() =1;
+ quit;
+%end;
+%else %do;
+
+proc sql;
+   create table BUFF_VAR as select varname as Variable, VarianceInflation
+  		FROM sshikh.VARLIST_FULL where monotonic() =1;
+ quit;
+
+PROC APPEND BASE=sshikh.VIF_BIN1 DATA=BUFF_VAR FORCE;
+%end;
+
+
+ proc sql;
+   create table VARLIST_BUFFER as select A.varname, A.VarianceInflation
+  		FROM sshikh.VARLIST_FULL  as a where A.varname not in (select Variable from sshikh.VIF_BIN1) ;
+ quit;
+
+
+ proc sql;
+   create table sshikh.VARLIST_FULL as select *
+  		FROM VARLIST_BUFFER;
+ quit;
+
+%let rest1=;
+
+proc sql;
+select varname into :rest1 seperated by " " from  VARLIST_BUFFER;
+quit;
+
+
+proc sql;
+select count(*) into:num_var from sshikh.VARLIST_FULL;
+run;
+
+%partial_corr(&i.);
+
+%if (&num_var > 0) %then %do;
+
+%if (&num_left > 0) %then %do;
+
+PROC REG DATA=sshikh.&abt.;
+ods output parameterestimates = reg_est(where=(variable<>"Intercept"));
+MODEL TARGET = &rest1 /VIF COLLIN;
+RUN;
+
+proc sql;
+create table sshikh.VARLIST_FULL as select Variable as varname, VarianceInflation  from reg_est order by VarianceInflation;
+quit;
+
+%end;
+
+%end;
+
+proc sql;
+create table dummy_count_buf as select varname from sshikh.VARLIST_FULL where monotonic() = 1;
+run;
+
+PROC APPEND BASE=dummy_count DATA=dummy_count_buf FORCE;
+
+proc sql;
+select count(*) into:count_iter from dummy_count;
+run;
+
+proc sql;
+select count(*) into:num_var from sshikh.VARLIST_FULL;
+run;
+
+
+%end;
+
+%mend form_bins;
+
+%form_bins();
+
+
+
+
+proc sql;
+create table sshikh.VARLIST_FULL_X as select *  from sshikh.VARLIST_NEW;
+quit;
+
+
+proc sql;
+create table VIF_BUF4 as select Max(BIN_ID) AS Max_BIN_num from sshikh.VARLIST_FULL_X;
+quit;
+
+proc sql;
+select Max_BIN_num into :Bin_total from  VIF_BUF4 WHERE monotonic()=1;
+quit;
+
+
+DATA sshikh.VARLIST_LEFTOVER;
+SET _NULL_;
+FORMAT _NAME_  $CHAR100. ABSOLUTE BEST30.  BIN_ID BEST10. BIN_SIZE BEST10.;
+RUN;
+
+
+
+%macro select_bins();
+
+%do j =1 %to &Bin_total;
+
+proc sql;
+select count(*) into :num from bin_stat_&j. ;
+quit;
+
+%let limit_select =  max(%eval(&num. /2),%eval(&num. -2));
+%put &limit_select.;
+
+proc sql;
+create table sshikh.VARLIST_LEFT as select * from bin_stat_&j. where monotonic()> &limit_select. && ABSOLUTE>0.01;
+quit;
+
+
+proc sql;
+create table bin_lefT_&j. as select _NAME_, ABSOLUTE, &j. as BIN_ID, &num. as BIN_SIZE from sshikh.VARLIST_LEFT;
+quit;
+
+PROC APPEND BASE=sshikh.VARLIST_LEFTOVER DATA=bin_lefT_&j.  FORCE;
+
+%end;
+
+
+%mend select_bins;
+
+%select_bins();
+
+
+
+proc sql;
+create table sshikh.VARLIST_PROCEDURE_2 as select *  from sshikh.VARLIST_LEFTOVER;
+quit;
+
+
+proc sql;
+create table sshikh.VARLIST_FULL as select _NAME_ as varname  from sshikh.VARLIST_LEFTOVER;
+quit;
+
+/*thirdprocedure*/
+%let dedup=sshikh.&abt.;
+
+
+proc sql;
+select varname into :VARLIST seperated by " " from  sshikh.VARLIST_FULL;
+quit;
+
+/* PROC Regression program to know Colliearity statistics, Condition Index,  and VIF  */
+PROC REG DATA=&dedup(keep= &VARLISt target );
+MODEL TARGET = &VARLIST /VIF COLLIN;
+ods output parameterestimates=vif_tbl
+(keep=variable varianceinflation where=(variable<>"Intercept"));
+RUN;
+
+
+/* Program to run logistic regression to obtain realisation on predictor variables  */
+
+PROC LOGISTIC DATA=&dedup(keep= &VARLISt target ) DESCENDING namelen=30; 
+MODEL TARGET = &VARLIST /LACKFIT 
+;OUTPUT OUT = reg_output(keep=target prob) XBETA = COEFF STDXBETA = STDCOEFF PREDICTED = PROB;
+ods output parameterestimates=wald_chi
+(drop=df stderr where=(variable<>"Intercept"));
+RUN;
+
+proc sql;
+create table est_vif as
+select a.*,b.* from
+vif_tbl as a inner join wald_chi as b
+on a.variable=b.variable
+order by waldchisq desc;
+run;
+
+
+proc sql;
+create table var_buff as
+select * from est_vif where varianceinflation >2 or waldchisq > 5 
+order by waldchisq desc;
+run;
+
+
+proc sql;
+create table sshikh.VARLIST_PROCEDURE_3 as select *  from var_buff;
+quit;
+
+proc sql;
+create table sshikh.VARLIST_FULL as
+select * from var_buff where waldchisq > 2 
+order by waldchisq desc;
+run;
+
+
+proc sql;
+create table sshikh.VARLIST_PROCEDURE_4 as select *  from sshikh.VARLIST_FULL;
+quit;
+
+%MACRO RNKORD(INDATA,ORDVAR,FLAGVAR);
+
+DATA TEMP1; SET &INDATA. (KEEP = &ORDVAR. &FLAGVAR. ); RUN;
+PROC MEANS DATA=TEMP1 SUM;
+VAR &ORDVAR.;
+RUN;
+
+PROC SORT DATA=TEMP1; BY DESCENDING &ORDVAR.; RUN;
+DATA TEMP2 (DROP = I COUNT);
+SET TEMP1 NOBS = SIZE;
+COUNT + 1;
+DO I = 1 TO 100;
+  IF (I-1) * (SIZE/100) < COUNT <= I * (SIZE/100) THEN DECILE = I;
+END;
+RUN;
+
+PROC FREQ DATA = TEMP2 FORMCHAR = '           ';
+TABLES DECILE * &FLAGVAR. /NOCUM NOROW NOCOL NOPERCENT;
+RUN;
+proc print data=est_vif;run ;
+
+%MEND RNKORD;
+
+%RNKORD(reg_output,PROB,TARGET);
+
+
+/*STORE VARLIST_procedure_4 and varlist_new*/

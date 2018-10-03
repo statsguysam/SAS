@@ -1,0 +1,219 @@
+/*Import data from csv*/
+
+DATA WORK.FINAL_SOW;
+    LENGTH
+        RETAILER_ID      $ 13
+        AVG_SUM_of_gross_Adds   8
+        SD_SUM_of_gross_Adds   8
+        MAX_SUM_of_gross_Adds1   8
+        URBAN_RURAL      $ 5
+        final_max_cell_Site   8
+        COUNT_DISTINCT_of_RETAILER_ID   8
+        SOGA_IDEA_JUN18    8
+        SOGA_TOTAL_JUN18   8
+        soga_final         8
+        avg_cnt_GA_days    8
+        avg_cnt_GAPS_GA    8 ;
+    FORMAT
+        RETAILER_ID      $CHAR13.
+        AVG_SUM_of_gross_Adds BEST12.
+        SD_SUM_of_gross_Adds BEST12.
+        MAX_SUM_of_gross_Adds1 BEST12.
+        URBAN_RURAL      $CHAR5.
+        final_max_cell_Site BEST12.
+        COUNT_DISTINCT_of_RETAILER_ID BEST2.
+        SOGA_IDEA_JUN18  BEST3.
+        SOGA_TOTAL_JUN18 BEST3.
+        soga_final       BEST12.
+        avg_cnt_GA_days  BEST12.
+        avg_cnt_GAPS_GA  BEST12. ;
+    INFORMAT
+        RETAILER_ID      $CHAR13.
+        AVG_SUM_of_gross_Adds BEST12.
+        SD_SUM_of_gross_Adds BEST12.
+        MAX_SUM_of_gross_Adds1 BEST12.
+        URBAN_RURAL      $CHAR5.
+        final_max_cell_Site BEST12.
+        COUNT_DISTINCT_of_RETAILER_ID BEST2.
+        SOGA_IDEA_JUN18  BEST3.
+        SOGA_TOTAL_JUN18 BEST3.
+        soga_final       BEST12.
+        avg_cnt_GA_days  BEST12.
+        avg_cnt_GAPS_GA  BEST12. ;
+    INFILE '/saswork_new/work/SAS_workA58A00A9011A_SVDG0631/#LN00011'
+        LRECL=119
+        ENCODING="LATIN1"
+        TERMSTR=CRLF
+        DLM='7F'x
+        MISSOVER
+        DSD ;
+    INPUT
+        RETAILER_ID      : $CHAR13.
+        AVG_SUM_of_gross_Adds : ?? COMMA12.
+        SD_SUM_of_gross_Adds : ?? COMMA12.
+        MAX_SUM_of_gross_Adds1 : ?? COMMA12.
+        URBAN_RURAL      : $CHAR5.
+        final_max_cell_Site : ?? BEST12.
+        COUNT_DISTINCT_of_RETAILER_ID : ?? BEST2.
+        SOGA_IDEA_JUN18  : ?? BEST3.
+        SOGA_TOTAL_JUN18 : ?? BEST3.
+        soga_final       : ?? COMMA12.
+        avg_cnt_GA_days  : ?? COMMA12.
+        avg_cnt_GAPS_GA  : ?? COMMA12. ;
+RUN;
+
+
+
+
+/*Change from character to numeric*/
+
+DATA WORK.FINAL_SOW1;
+set  WORK.FINAL_SOW;
+SOGA_IDEA_JUN181=put(SOGA_IDEA_JUN18,12.);
+run;
+
+data a;
+num_var = 123456;
+char_var = put(num_var,6.);
+run;
+
+
+proc contents data=FINAL_SOW1;
+run;
+
+
+
+/*Change from numeric to character*/
+
+DATA WORK.FINAL_SOW2;
+set  WORK.FINAL_SOW1;
+SOGA_IDEA_JUN182=input(SOGA_IDEA_JUN181,12.);
+run;
+
+data new;
+   char_var = '12345678';
+   numeric_var = input(char_var, 8.);
+run;
+
+proc contents data=FINAL_SOW2;
+run;
+/*Keeping only few columns in a new dataset*/
+
+data FINAL_SOW3;
+set FINAL_SOW2(keep= AVG_SUM_of_gross_Adds 
+RETAILER_ID
+);
+rename AVG_SUM_of_gross_Adds=test;
+
+;
+run;
+
+/*Keeping only few rows in a new dataset*/
+
+data t;
+set FINAL_SOW3 (OBS=10);
+run;
+
+PROC SQL;
+SELECT * FROM FINAL_SOW3 (OBS=10);
+QUIT;
+
+PROC SQL;
+create table test as SELECT * FROM FINAL_SOW3 (OBS=10);
+QUIT;
+
+
+
+
+
+/*Sorting based on 1 column & keeping only that column removing the duplicate values from it*/
+
+proc sort data=FINAL_SOW2 (keep=RETAILER_ID) nodupkey out=outdata;
+by RETAILER_ID;
+run;
+
+
+
+/*Create dummy vars for categorical vars*/
+data train1;
+set train;
+if Gender='Male' then Gender_cat=1;
+if Gender='Female' then Gender_cat=0;
+run;
+
+
+
+/* Mean imputation: Use PROC STDIZE to replace missing values with mean */
+proc stdize data=train1 out=train2 
+      oprefix=Orig_         /* prefix for original variables */
+      reponly               /* only replace; do not standardize */
+      method=MEAN;          /* or MEDIAN, MINIMUM, MIDRANGE, etc. */
+   var LoanAmount Loan_Amount_Term;              /* you can list multiple variables to impute */
+run;
+
+
+/*Frequency count for single variable*/
+proc freq data=train1;
+table Loan_Status;
+run;
+
+/*Cross tab*/
+proc freq data=train1;
+table Married*Loan_Status;
+run;
+
+
+
+
+
+/*Histograms*/
+proc univariate data=train1;
+  class Loan_Status;
+  var LoanAmount;      /* computes descriptive statisitcs */
+  histogram LoanAmount / nrows=2 odstitle="PROC UNIVARIATE with CLASS statement";
+  ods select histogram; /* display on the histograms */
+run;
+
+proc sgplot data=train1;
+  where Loan_Status in ("Y", "N");       /* restrict to two groups */
+  histogram LoanAmount / group=Loan_Status transparency=0.5;       /* SAS 9.4m2 */
+  density LoanAmount / type=kernel group=Loan_Status; /* overlay density estimates */
+run;
+
+proc univariate data=train1;
+  class Loan_Status;
+  var LoanAmount;
+  histogram LoanAmount / kernel overlay;  /* SAS 9.4m3 */
+run;
+
+
+
+/*Log,exp,sin transformation of variables*/
+
+data train1;
+set train;
+a=log(LoanAmount);
+b=exp(a);
+c=sqrt(a);
+d=sin(a);
+run;
+
+
+
+/*Dividing the data into train test -70% and 30%*/
+
+data training testing;
+   set train_u6lujuX_CVtuZ9i ;
+   if ranuni(1) >= 0.3 then output training;
+    else output testing;
+   run;
+
+
+
+
+
+/*Normalizing the data between 0 & 1*/
+
+proc stdize data=cars out=zcars method=RANGE;
+   var weight price;
+run;

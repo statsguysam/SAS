@@ -1,0 +1,13 @@
+/*variable list*/
+
+%Let datasetname=    ;
+%LET VARLIST=
+
+
+;
+
+/* PROC Regression program to know Colliearity statistics, Condition Index,  and VIF  */
+
+PROC REG DATA= &datasetname.; /*dataset name*/
+MODEL TARGET = &VARLIST. /VIF COLLIN;
+RUN;

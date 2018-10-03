@@ -1,0 +1,63 @@
+/***********************************************/
+/*Partial Correlation*/
+/*************************************/
+
+
+%let input_dataset=sshikh.WB_DIU_ABT_FINAL23; /*Input dataset */
+%let out_corrdata=sshikh.SEMIPARTIAL_CORR_WB_2; /*Name to be changed everytime you run this code*/
+%let target_var=TARGET;
+
+
+data VARLIST_FULL;
+   input varname $char50.;
+   datalines;
+RAT_REV_F7M3_M2
+SD_REV_3DB_L36
+;
+run;
+/*Count of variables*/
+proc sql;
+select count(*) into :var_len from  VARLIST_FULL ;
+quit;
+%put &var_len.;
+
+
+
+DATA datasetname;
+SET _NULL_;
+FORMAT _NAME_  $CHAR100. &target_var. BEST30.;
+RUN;
+
+%macro partial_corr();
+%do i=1 %to &var_len. ;
+
+proc sql;
+select varname into :mainvar from VARLIST_FULL where monotonic()=&i.;
+quit;
+
+%put &mainvar;
+
+proc sql;
+select varname into :rest seperated by " " from  VARLIST_FULL where varname ne "&mainvar";
+quit;
+
+%put rest = &rest;
+
+PROC CORR DATA=&input_dataset. NOPROB nosimple nomiss outp=CorrOutp;
+var target &mainvar;
+partial  &rest.;
+RUN;
+
+proc sql;
+create table INDI_CORR as select _NAME_,TARGET FROM CorrOutp WHERE _TYPE_="CORR" AND _NAME_="&mainvar";
+RUN;
+
+
+PROC APPEND BASE=&out_corrdata. DATA=INDI_CORR FORCE ;
+
+%end;
+
+%mend partial_corr;
+
+%partial_corr();
+

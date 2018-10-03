@@ -1,0 +1,1512 @@
+
+proc contents data=&base order=vanum;run;
+
+
+options nosymbolgen nomprint nomacrogen;
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/VINTAGE.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/CREATEFILE.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/SUM_RAT_PCT.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/INS_ALL_FLAGVAR.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/LOW_ZERO_MOU_REV.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/LOWBAL_DAYS.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/AVG_SUM_SD.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/SLOPE.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/SD_X_DB_L36.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/RECHARGE_VALUE_HIGHRECHARGE.sas';
+
+
+data &rawdata;
+set &rawdata;
+if max(STD_I2I_OG_MOU,STD_I2O_OG_MOU)>0 then STD_OG_FLAG='Y';
+else STD_OG_FLAG='N';
+if max(STD_I2I_IC_MOU,STD_I2O_IC_MOU)>0 then STD_IC_FLAG='Y';
+else STD_IC_FLAG='N';
+if max(STD_I2I_OG_MOU,STD_I2O_OG_MOU,STD_I2I_IC_MOU,STD_I2O_IC_MOU)>0 then STD_FLAG='Y';
+else STD_FLAG='N';
+if max(LOCAL_I2I_OG_MOU,LOCAL_I2O_OG_MOU)>0 then LOCAL_OG_FLAG='Y';
+else LOCAL_OG_FLAG='N';
+if max(LOCAL_I2I_IC_MOU,LOCAL_I2O_IC_MOU)>0 then LOCAL_IC_FLAG='Y';
+else LOCAL_IC_FLAG='N';
+if max(LOCAL_I2I_OG_MOU,LOCAL_I2O_OG_MOU,LOCAL_I2I_IC_MOU,LOCAL_I2O_IC_MOU)>0 then LOCAL_FLAG='Y';
+else LOCAL_FLAG='N';
+if data_flag=1 then data_tag= 'Y' ;
+else data_tag= 'N' ;
+VOICE_ARPU=SUM(AIRTIME_CORE_HOM_USAGE_REVENUE,AIRTIME_DED_HOME_USAGE_REVENUE,
+                        AIRTIME_CORE_OR_USAGE_REVENUE,AIRTIME_DED_OR_USAGE_REVENUE,
+                   PF_AIRTIME_LOCAL_ONNET,PF_AIRTIME_LOCAL_OFFNET,PF_AIRTIME_NLD_ONNET,
+                   PF_AIRTIME_NLD_OFFNET,PF_AIRTIME_ISD,0);
+run;
+
+data &rawdatatest;
+set &rawdata (keep=subs_key);
+run;
+
+
+proc sort data=&rawdatatest nodupkey; 
+by subs_key; 
+run;
+
+data &base;
+set &rawdatatest;
+run;
+
+%create_file(TOTAL_MOU,OUTFILE=lib.RTD_MOU);         
+%SUM_VINTAGE(RTD_MOU,INFILE=lib.RTD_MOU);       
+%PCT_CHG(RTD_MOU);
+%SUM("&Last4days"d, &run_date,RTD_MOU_L4,INFILE=lib.RTD_MOU);
+%SUM("&Last7days"d, &run_date,RTD_MOU_L7,INFILE=lib.RTD_MOU);
+%SUM("&Last15days"d, &run_date,RTD_MOU_L15,INFILE=lib.RTD_MOU);
+%SUM("&Last37days"d, "&Last8days"d,RTD_MOU_M2,INFILE=lib.RTD_MOU);
+%SUM("&Last37days"d, &run_date,RTD_MOU_L37,INFILE=lib.RTD_MOU);
+%SLOPE ( INFILE=lib.RTD_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=RTD_MOU , OUT=RTD_MOU_L7);
+%SLOPE ( INFILE=lib.RTD_MOU, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=RTD_MOU , OUT=RTD_MOU_L15);
+%SLOPE ( INFILE=lib.RTD_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=RTD_MOU , OUT=RTD_MOU_M2);
+%SLOPE ( INFILE=lib.RTD_MOU, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=RTD_MOU , OUT=RTD_MOU_L37);
+%SD_4DB_L36(RTD_MOU,INFILE=lib.RTD_MOU);
+%SD_3DB_L36(RTD_MOU,INFILE=lib.RTD_MOU);
+%DELETE_FILE(lib,RTD_MOU);
+
+%create_file(TOT_OG_HOME_MOU,OUTFILE=lib.OG_MOU);
+%SUM_VINTAGE(OG_HOM_MOU,INFILE=lib.OG_MOU);
+%PCT_CHG(OG_HOM_MOU);
+%SUM("&Last4days"d, &run_date,OG_HOM_MOU_L4,INFILE=lib.OG_MOU);
+%SUM("&Last7days"d, &run_date,OG_HOM_MOU_L7,INFILE=lib.OG_MOU);
+%SUM("&Last15days"d, &run_date,OG_HOM_MOU_L15,INFILE=lib.OG_MOU);
+%SUM("&Last37days"d, "&Last8days"d,OG_HOM_MOU_M2,INFILE=lib.OG_MOU);
+%SUM("&Last37days"d, &run_date,OG_HOM_MOU_L37,INFILE=lib.OG_MOU);
+%SLOPE ( INFILE=lib.OG_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=OG_HOM_MOU , OUT=OG_HOM_MOU_L7);
+%SLOPE ( INFILE=lib.OG_MOU, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=OG_HOM_MOU , OUT=OG_HOM_MOU_L15);
+%SLOPE ( INFILE=lib.OG_MOU, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=OG_HOM_MOU , OUT=OG_HOM_MOU_L37);
+%SLOPE ( INFILE=lib.OG_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=OG_HOM_MOU , OUT=OG_HOM_MOU_M2);
+
+%SD_4DB_L36(OG_HOM_MOU,INFILE=lib.OG_MOU);
+%SD_3DB_L36(OG_HOM_MOU,INFILE=lib.OG_MOU);
+%DELETE_FILE(lib,OG_MOU);
+
+
+
+
+%create_file(CUST_REV,OUTFILE=lib.REV);               
+%SUM_VINTAGE(REV,INFILE=lib.REV);
+%PCT_CHG(REV);
+%SUM("&Last4days"d, &run_date,REV_L4,INFILE=lib.REV);
+%SUM("&Last7days"d, &run_date,REV_L7,INFILE=lib.REV);
+%SUM("&Last15days"d, &run_date,REV_L15,INFILE=lib.REV);
+%SUM("&Last37days"d, "&Last8days"d,REV_M2,INFILE=lib.REV);
+%SUM("&Last37days"d, &run_date,REV_L37,INFILE=lib.REV);
+
+
+%SLOPE ( INFILE=lib.REV, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=REV , OUT=REV_L7);
+%SLOPE ( INFILE=lib.REV, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=REV , OUT=REV_L15);
+%SLOPE ( INFILE=lib.REV, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=REV , OUT=REV_L37);
+%SLOPE ( INFILE=lib.REV, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=REV , OUT=REV_M2);
+
+%SD_4DB_L36(REV,INFILE=lib.REV);
+%SD_3DB_L36(REV,INFILE=lib.REV);
+%DELETE_FILE(lib,REV);
+
+%let varlist=TOT_OG_HOME_MOU,TOT_OG_ROAMING_MOU;
+%create_file_varlist(OUTFILE=lib.OG_MOU_ALL);
+%SUM_VINTAGE(OG_MOU_ALL,INFILE=lib.OG_MOU_ALL);
+%PCT_CHG(OG_MOU_ALL);
+%SUM("&Last4days"d, &run_date,OG_MOU_ALL_L4,INFILE=lib.OG_MOU_ALL);
+%SUM("&Last7days"d, &run_date,OG_MOU_ALL_L7,INFILE=lib.OG_MOU_ALL);
+%SUM("&Last15days"d, &run_date,OG_MOU_ALL_L15,INFILE=lib.OG_MOU_ALL);
+%SUM("&Last37days"d, "&Last8days"d,OG_MOU_ALL_M2,INFILE=lib.OG_MOU_ALL);
+%SUM("&Last37days"d, &run_date,OG_MOU_ALL_L37,INFILE=lib.OG_MOU_ALL);
+%SLOPE ( INFILE=lib.OG_MOU_ALL, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=OG_MOU_ALL , OUT=OG_MOU_ALL_L7);
+%SLOPE ( INFILE=lib.OG_MOU_ALL, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=OG_MOU_ALL , OUT=OG_MOU_ALL_L15);
+%SLOPE ( INFILE=lib.OG_MOU_ALL, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=OG_MOU_ALL , OUT=OG_MOU_ALL_L37);
+%SLOPE ( INFILE=lib.OG_MOU_ALL, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=OG_MOU_ALL , OUT=OG_MOU_ALL_M2);
+
+%SD_4DB_L36(OG_MOU_ALL,INFILE=lib.OG_MOU_ALL);
+%SD_3DB_L36(OG_MOU_ALL,INFILE=lib.OG_MOU_ALL);
+%DELETE_FILE(lib,OG_MOU_ALL);
+
+%let varlist=TOT_IC_HOME_MOU,TOT_IC_RMNG_MOU;
+%create_file_varlist(OUTFILE=lib.IC_MOU_ALL);
+%SUM_VINTAGE(IC_MOU_ALL,INFILE=lib.IC_MOU_ALL);
+%PCT_CHG(IC_MOU_ALL);
+%SUM("&Last4days"d, &run_date,IC_MOU_ALL_L4,INFILE=lib.IC_MOU_ALL);
+%SUM("&Last7days"d, &run_date,IC_MOU_ALL_L7,INFILE=lib.IC_MOU_ALL);
+%SUM("&Last15days"d, &run_date,IC_MOU_ALL_L15,INFILE=lib.IC_MOU_ALL);
+%SUM("&Last37days"d, "&Last8days"d,IC_MOU_ALL_M2,INFILE=lib.IC_MOU_ALL);
+%SUM("&Last37days"d, &run_date,IC_MOU_ALL_L37,INFILE=lib.IC_MOU_ALL);
+%SLOPE ( INFILE=lib.IC_MOU_ALL, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=IC_MOU_ALL , OUT=IC_MOU_ALL_L7);
+%SLOPE ( INFILE=lib.IC_MOU_ALL, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=IC_MOU_ALL , OUT=IC_MOU_ALL_L15);
+%SLOPE ( INFILE=lib.IC_MOU_ALL, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=IC_MOU_ALL , OUT=IC_MOU_ALL_L37);
+%SLOPE ( INFILE=lib.IC_MOU_ALL, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=IC_MOU_ALL , OUT=IC_MOU_ALL_M2);
+
+%SD_4DB_L36(IC_MOU_ALL,INFILE=lib.IC_MOU_ALL);
+%SD_3DB_L36(IC_MOU_ALL,INFILE=lib.IC_MOU_ALL);
+%DELETE_FILE(lib,IC_MOU_ALL);
+
+
+%let varlist=TOT_OG_HOME_REV,TOT_OG_ROAMING_REV;
+%create_file_varlist(OUTFILE=lib.OG_REV_ALL);
+%SUM_VINTAGE(OG_REV_ALL,INFILE=lib.OG_REV_ALL);
+%PCT_CHG(OG_REV_ALL);
+%SUM("&Last4days"d, &run_date,OG_REV_ALL_L4,INFILE=lib.OG_REV_ALL);
+%SUM("&Last7days"d, &run_date,OG_REV_ALL_L7,INFILE=lib.OG_REV_ALL);
+%SUM("&Last15days"d, &run_date,OG_REV_ALL_L15,INFILE=lib.OG_REV_ALL);
+%SUM("&Last37days"d, "&Last8days"d,OG_REV_ALL_M2,INFILE=lib.OG_REV_ALL);
+%SUM("&Last37days"d, &run_date,OG_REV_ALL_L37,INFILE=lib.OG_REV_ALL);
+
+
+
+%SLOPE (INFILE=lib.OG_REV_ALL, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=OG_REV , OUT=OG_REV_L7);
+%SLOPE (INFILE=lib.OG_REV_ALL,DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=OG_REV , OUT=OG_REV_L15);
+%SLOPE (INFILE=lib.OG_REV_ALL,DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=OG_REV , OUT=OG_REV_L37);
+%SLOPE ( INFILE=lib.OG_REV_ALL, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=OG_REV , OUT=OG_REV_M2);
+
+%SD_4DB_L36(OG_REV,INFILE=lib.OG_REV_ALL);
+%SD_3DB_L36(OG_REV,INFILE=lib.OG_REV_ALL);
+%DELETE_FILE(lib,OG_REV_ALL);
+
+/*Stop 1*/
+
+proc contents data=&base order=varnum;run;
+
+
+%let varlist=LOCAL_I2I_IC_MOU,LOCAL_I2O_IC_MOU;
+%create_file_varlist(OUTFILE=lib.LOCAL_IC_MOU);
+%SUM_VINTAGE(LOC_IC_MOU,INFILE=lib.LOCAL_IC_MOU);
+%PCT_CHG(LOC_IC_MOU);
+%SUM("&Last4days"d, &run_date,LOC_IC_MOU_L4,INFILE=lib.LOCAL_IC_MOU);
+%SUM("&Last7days"d, &run_date,LOC_IC_MOU_L7,INFILE=lib.LOCAL_IC_MOU);
+%SUM("&Last15days"d, &run_date,LOC_IC_MOU_L15,INFILE=lib.LOCAL_IC_MOU);
+%SUM("&Last37days"d, "&Last8days"d,LOC_IC_MOU_M2,INFILE=lib.LOCAL_IC_MOU);
+%SUM("&Last37days"d, &run_date,LOC_IC_MOU_L37,INFILE=lib.LOCAL_IC_MOU);
+%SLOPE (INFILE=lib.LOCAL_IC_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=LOC_IC_MOU , OUT=LOC_IC_MOU_L7);
+%SLOPE (INFILE=lib.LOCAL_IC_MOU,DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=LOC_IC_MOU , OUT=LOC_IC_MOU_L15);
+%SLOPE (INFILE=lib.LOCAL_IC_MOU,DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=LOC_IC_MOU , OUT=LOC_IC_MOU_L37);
+%SLOPE ( INFILE=lib.LOCAL_IC_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=LOC_IC_MOU , OUT=LOC_IC_MOU_M2);
+
+%SD_4DB_L36(LOC_IC_MOU,INFILE=lib.LOCAL_IC_MOU);
+%SD_3DB_L36(LOC_IC_MOU,INFILE=lib.LOCAL_IC_MOU);
+%DELETE_FILE(lib,LOCAL_IC_MOU);
+
+%let varlist=STD_I2I_IC_MOU,STD_I2O_IC_MOU;
+%create_file_varlist(OUTFILE=lib.STD_IC_MOU);
+%SUM_VINTAGE(STD_IC_MOU,INFILE=lib.STD_IC_MOU);
+%PCT_CHG(STD_IC_MOU);
+%SUM("&Last4days"d, &run_date,STD_IC_MOU_L4,INFILE=lib.STD_IC_MOU);
+%SUM("&Last7days"d, &run_date,STD_IC_MOU_L7,INFILE=lib.STD_IC_MOU);
+%SUM("&Last15days"d, &run_date,STD_IC_MOU_L15,INFILE=lib.STD_IC_MOU);
+%SUM("&Last37days"d, "&Last8days"d,STD_IC_MOU_M2,INFILE=lib.STD_IC_MOU);
+%SUM("&Last37days"d, &run_date,STD_IC_MOU_L37,INFILE=lib.STD_IC_MOU);
+%SLOPE (INFILE=lib.STD_IC_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=STD_IC_MOU , OUT=STD_IC_MOU_L7);
+%SLOPE (INFILE=lib.STD_IC_MOU,DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=STD_IC_MOU , OUT=STD_IC_MOU_L15);
+%SLOPE (INFILE=lib.STD_IC_MOU,DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=STD_IC_MOU , OUT=STD_IC_MOU_L37);
+%SLOPE ( INFILE=lib.STD_IC_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=STD_IC_MOU , OUT=STD_IC_MOU_M2);
+
+%SD_4DB_L36(STD_IC_MOU,INFILE=lib.STD_IC_MOU);
+%SD_3DB_L36(STD_IC_MOU,INFILE=lib.STD_IC_MOU);
+%DELETE_FILE(lib,STD_IC_MOU);
+
+
+%let varlist=LOCAL_I2I_OG_MOU,LOCAL_I2O_OG_MOU;
+%create_file_varlist(OUTFILE=lib.LOC_OG_MOU);
+%SUM_VINTAGE(LOC_OG_MOU,INFILE=lib.LOC_OG_MOU);
+%PCT_CHG(LOC_OG_MOU);
+%SUM("&Last4days"d, &run_date,LOC_OG_MOU_L4,INFILE=lib.LOC_OG_MOU);
+%SUM("&Last7days"d, &run_date,LOC_OG_MOU_L7,INFILE=lib.LOC_OG_MOU);
+%SUM("&Last15days"d, &run_date,LOC_OG_MOU_L15,INFILE=lib.LOC_OG_MOU);
+%SUM("&Last37days"d, "&Last8days"d,LOC_OG_MOU_M2,INFILE=lib.LOC_OG_MOU);
+%SUM("&Last37days"d, &run_date,LOC_OG_MOU_L37,INFILE=lib.LOC_OG_MOU);
+%SLOPE (INFILE=lib.LOC_OG_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=LOC_OG_MOU , OUT=LOC_OG_MOU_L7);
+%SLOPE (INFILE=lib.LOC_OG_MOU,DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=LOC_OG_MOU , OUT=LOC_OG_MOU_L15);
+%SLOPE (INFILE=lib.LOC_OG_MOU,DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=LOC_OG_MOU , OUT=LOC_OG_MOU_L37);
+%SLOPE ( INFILE=lib.LOC_OG_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=LOC_OG_MOU , OUT=LOC_OG_MOU_M2);
+
+%SD_4DB_L36(LOC_OG_MOU,INFILE=lib.LOC_OG_MOU);
+%SD_3DB_L36(LOC_OG_MOU,INFILE=lib.LOC_OG_MOU);
+%DELETE_FILE(lib,LOC_OG_MOU);
+
+%let varlist=STD_I2I_OG_MOU,STD_I2O_OG_MOU;
+%create_file_varlist(OUTFILE=lib.STD_OG_MOU);
+%SUM_VINTAGE(STD_OG_MOU,INFILE=lib.STD_OG_MOU);
+%PCT_CHG(STD_OG_MOU);
+%SUM("&Last4days"d, &run_date,STD_OG_MOU_L4,INFILE=lib.STD_OG_MOU);
+%SUM("&Last7days"d, &run_date,STD_OG_MOU_L7,INFILE=lib.STD_OG_MOU);
+%SUM("&Last15days"d, &run_date,STD_OG_MOU_L15,INFILE=lib.STD_OG_MOU);
+%SUM("&Last37days"d, "&Last8days"d,STD_OG_MOU_M2,INFILE=lib.STD_OG_MOU);
+%SUM("&Last37days"d, &run_date,STD_OG_MOU_L37,INFILE=lib.STD_OG_MOU);
+%SLOPE (INFILE=lib.STD_OG_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=STD_OG_MOU , OUT=STD_OG_MOU_L7);
+%SLOPE (INFILE=lib.STD_OG_MOU,DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=STD_OG_MOU , OUT=STD_OG_MOU_L15);
+
+/*STOOOOOOOOP  second*/
+
+
+
+
+%SLOPE (INFILE=lib.STD_OG_MOU,DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=STD_OG_MOU , OUT=STD_OG_MOU_L37);
+%SLOPE ( INFILE=lib.STD_OG_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=STD_OG_MOU , OUT=STD_OG_MOU_M2);
+
+%SD_4DB_L36(STD_OG_MOU,INFILE=lib.STD_OG_MOU);
+%SD_3DB_L36(STD_OG_MOU,INFILE=lib.STD_OG_MOU);
+%DELETE_FILE(lib,STD_OG_MOU);
+
+
+
+
+
+
+%let varlist=REV_OG_STD_I2I,REV_OG_STD_I2O;
+%create_file_varlist(OUTFILE=lib.STD_OG_REV);
+%SUM_VINTAGE(STD_OG_REV,INFILE=lib.STD_OG_REV);
+%PCT_CHG(STD_OG_REV);
+%SUM("&Last4days"d, &run_date,STD_OG_REV_L4,INFILE=lib.STD_OG_REV);
+%SUM("&Last7days"d, &run_date,STD_OG_REV_L7,INFILE=lib.STD_OG_REV);
+%SUM("&Last15days"d, &run_date,STD_OG_REV_L15,INFILE=lib.STD_OG_REV);
+%SUM("&Last37days"d, "&Last8days"d,STD_OG_REV_M2,INFILE=lib.STD_OG_REV);
+%SUM("&Last37days"d, &run_date,STD_OG_REV_L37,INFILE=lib.STD_OG_REV);
+%SLOPE (INFILE=lib.STD_OG_REV, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=STD_OG_REV , OUT=STD_OG_REV_L7);
+%SLOPE (INFILE=lib.STD_OG_REV,DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=STD_OG_REV , OUT=STD_OG_REV_L15);
+%SLOPE (INFILE=lib.STD_OG_REV,DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=STD_OG_REV , OUT=STD_OG_REV_L37);
+%SLOPE ( INFILE=lib.STD_OG_REV, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=STD_OG_REV , OUT=STD_OG_REV_M2);
+
+%SD_4DB_L36(STD_OG_REV,INFILE=lib.STD_OG_REV);
+%SD_3DB_L36(STD_OG_REV,INFILE=lib.STD_OG_REV);
+%DELETE_FILE(lib,STD_OG_REV);
+
+data lib.backup;
+set &base;
+run;
+
+
+proc contents data=&base order=varnum;run;
+
+
+%create_file(MAIN_BAL_INR,OUTFILE=lib.MAIN_BAL);
+%SUM("&Last4days"d, &run_date,MBL_L4,INFILE=lib.MAIN_BAL);
+%SUM("&Last7days"d, &run_date,MBL_L7,INFILE=lib.MAIN_BAL);
+%SUM("&Last15days"d, &run_date,MBL_L15,INFILE=lib.MAIN_BAL);
+%SUM("&Last37days"d, "&Last8days"d,MBL_M2,INFILE=lib.MAIN_BAL);
+%SUM("&Last37days"d, &run_date,MBL_L37,INFILE=lib.MAIN_BAL);
+%SLOPE ( INFILE=lib.MAIN_BAL, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=MBL , OUT=MBL_L7);
+%SLOPE ( INFILE=lib.MAIN_BAL, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=MBL , OUT=MBL_L15);
+%SLOPE ( INFILE=lib.MAIN_BAL, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=MBL , OUT=MBL_L37);
+%SLOPE ( INFILE=lib.MAIN_BAL, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=MBL , OUT=MBL_M2);
+
+
+
+
+%SD_4DB_L36(MBL,INFILE=lib.MAIN_BAL);
+%SD_3DB_L36(MBL,INFILE=lib.MAIN_BAL);
+%DELETE_FILE(lib,MAIN_BAL);
+
+
+%let varlist=AIRTIME_CORE_HOM_USAGE_REVENUE,AIRTIME_DED_HOME_USAGE_REVENUE,AIRTIME_CORE_OR_USAGE_REVENUE,
+AIRTIME_DED_OR_USAGE_REVENUE,PF_AIRTIME_LOCAL_ONNET,PF_AIRTIME_LOCAL_OFFNET,PF_AIRTIME_NLD_ONNET,
+PF_AIRTIME_NLD_OFFNET,PF_AIRTIME_ISD;
+
+%create_file_varlist(OUTFILE=lib.Voice_ARPU);
+%SUM_VINTAGE(Voice_ARPU,INFILE=lib.Voice_ARPU);
+%PCT_CHG(Voice_ARPU);
+%SUM("&Last4days"d, &run_date,Voice_ARPU_L4,INFILE=lib.Voice_ARPU);
+%SUM("&Last7days"d, &run_date,Voice_ARPU_L7,INFILE=lib.Voice_ARPU);
+%SUM("&Last15days"d, &run_date,Voice_ARPU_L15,INFILE=lib.Voice_ARPU);
+%SUM("&Last37days"d, "&Last8days"d,Voice_ARPU_M2,INFILE=lib.Voice_ARPU);
+%SUM("&Last37days"d, &run_date,Voice_ARPU_L37,INFILE=lib.Voice_ARPU);
+%SLOPE ( INFILE=lib.Voice_ARPU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=Voice_ARPU , OUT=Voice_ARPU_L7);
+%SLOPE ( INFILE=lib.Voice_ARPU, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=Voice_ARPU , OUT=Voice_ARPU_L15);
+%SLOPE ( INFILE=lib.Voice_ARPU, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=Voice_ARPU , OUT=Voice_ARPU_L37);
+%SLOPE ( INFILE=lib.Voice_ARPU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=Voice_ARPU , OUT=Voice_ARPU_M2);
+%SD_4DB_L36(Voice_ARPU,INFILE=lib.Voice_ARPU);
+%SD_3DB_L36(Voice_ARPU,INFILE=lib.Voice_ARPU);
+%DELETE_FILE(lib,Voice_ARPU);
+%DELETE_FILE(lib,Voice_ARPU);
+
+/***********************************************/
+
+%create_flag_file(USAGE_DAY_FLAG,OUTFILE=lib.USAGE);
+%CNT("&last4days"D, &run_date,USG_INS_L4,INFILE=lib.USAGE);
+%CNT("&last7days"D, &run_date,USG_INS_L7,INFILE=lib.USAGE);
+%CNT("&last14days"D, &run_date,USG_INS_L14,INFILE=lib.USAGE);
+%CNT("&Last37days"d, "&Last8days"d,USG_INS_M2,INFILE=lib.USAGE);
+%CNT("&last37days"D, &run_date,USG_INS_L37,INFILE=lib.USAGE);
+%DELETE_FILE(lib,USAGE);
+
+%create_flag_file(DATA_Tag,OUTFILE=lib.DATA);
+%CNT("&last4days"D, &run_date,DATA_INS_L4,INFILE=lib.DATA);
+%CNT("&last7days"D, &run_date,DATA_INS_L7,INFILE=lib.DATA);
+%CNT("&last14days"D, &run_date,DATA_INS_L14,INFILE=lib.DATA);
+%CNT("&Last37days"d, "&Last8days"d,DATA_INS_M2,INFILE=lib.DATA);
+%CNT("&last37days"D, &run_date,DATA_INS_L37,INFILE=lib.DATA);
+%DELETE_FILE(lib,DATA);
+
+%create_flag_file(VLR_DAY_FLAG,OUTFILE=lib.VLR);
+%CNT("&last4days."d, &run_date,VLR_INS_L4,INFILE=lib.VLR);
+%CNT("&last7days."d, &run_date,VLR_INS_L7,INFILE=lib.VLR);
+%CNT("&last14days."d, &run_date,VLR_INS_L14,INFILE=lib.VLR);
+%CNT("&Last37days"d, "&Last8days"d,VLR_INS_M2,INFILE=lib.VLR);
+%CNT("&last37days."d, &run_date,VLR_INS_L37,INFILE=lib.VLR);
+%DELETE_FILE(lib,VLR);
+
+
+
+
+%create_flag_file( DECREMENT_DAY_FLAG,OUTFILE=lib.DECREMENT);
+%CNT("&last4days."d, &run_date,DEC_INS_L4,INFILE=lib.DECREMENT);
+%CNT("&last7days."d, &run_date,DEC_INS_L7,INFILE=lib.DECREMENT);
+%CNT("&last14days."d, &run_date,DEC_INS_L14,INFILE=lib.DECREMENT);
+%CNT("&Last37days"d, "&Last8days"d,DEC_INS_M2,INFILE=lib.DECREMENT);
+%CNT("&last37days."d, &run_date,DEC_INS_L37,INFILE=lib.DECREMENT);
+%DELETE_FILE(lib,DECREMENT);
+
+%create_flag_file( ROAMING_FLAG,OUTFILE=lib.ROAMING);
+%CNT("&last4days."d, &run_date,RMG_INS_L4,INFILE=lib.ROAMING);
+%CNT("&last7days."d, &run_date,RMG_INS_L7,INFILE=lib.ROAMING);
+%CNT("&last14days."d, &run_date,RMG_INS_L14,INFILE=lib.ROAMING);
+%CNT("&Last37days"d, "&Last8days"d,RMG_INS_M2,INFILE=lib.ROAMING);
+%CNT("&last37days."d, &run_date,RMG_INS_L37,INFILE=lib.ROAMING);
+%DELETE_FILE(lib,ROAMING);
+
+%create_flag_file( STD_OG_FLAG,OUTFILE=lib.STD_OG);
+%CNT("&last4days."d, &run_date,STD_OG_INS_L4,INFILE=lib.STD_OG);
+%CNT("&last7days."d, &run_date,STD_OG_INS_L7,INFILE=lib.STD_OG);
+%CNT("&last14days."d, &run_date,STD_OG_INS_L14,INFILE=lib.STD_OG);
+%CNT("&Last37days"d, "&Last8days"d,STD_OG_INS_M2,INFILE=lib.STD_OG);
+%CNT("&last37days."d, &run_date,STD_OG_INS_L37,INFILE=lib.STD_OG);
+%DELETE_FILE(lib,STD_OG);
+
+%create_flag_file( STD_IC_FLAG,OUTFILE=lib.STD_IC);
+%CNT("&last4days."d, &run_date,STD_IC_INS_L4,INFILE=lib.STD_IC);
+%CNT("&last7days."d, &run_date,STD_IC_INS_L7,INFILE=lib.STD_IC);
+%CNT("&last14days."d, &run_date,STD_IC_INS_L14,INFILE=lib.STD_IC);
+%CNT("&Last37days"d, "&Last8days"d,STD_IC_INS_M2,INFILE=lib.STD_IC);
+%CNT("&last37days."d, &run_date,STD_IC_INS_L37,INFILE=lib.STD_IC);
+%DELETE_FILE(lib,STD_IC);
+
+%create_flag_file( STD_FLAG,OUTFILE=lib.STD);
+%CNT("&last4days."d, &run_date,STD_INS_L4,INFILE=lib.STD);
+%CNT("&last7days."d, &run_date,STD_INS_L7,INFILE=lib.STD);
+%CNT("&last14days."d, &run_date,STD_INS_L14,INFILE=lib.STD);
+%CNT("&Last37days"d, "&Last8days"d,STD_INS_M2,INFILE=lib.STD);
+%CNT("&last37days."d, &run_date,STD_INS_L37,INFILE=lib.STD);
+%DELETE_FILE(lib,STD);
+
+%create_flag_file( LOCAL_OG_FLAG,OUTFILE=lib.LOCAL_OG);
+%CNT("&last4days."d, &run_date,LOC_OG_INS_L4,INFILE=lib.LOCAL_OG);
+%CNT("&last7days."d, &run_date,LOC_OG_INS_L7,INFILE=lib.LOCAL_OG);
+%CNT("&last14days."d, &run_date,LOC_OG_INS_L14,INFILE=lib.LOCAL_OG);
+%CNT("&Last37days"d, "&Last8days"d,LOC_OG_INS_M2,INFILE=lib.LOCAL_OG);
+%CNT("&last37days."d, &run_date,LOC_OG_INS_L37,INFILE=lib.LOCAL_OG);
+%DELETE_FILE(lib,LOCAL_OG);
+
+%create_flag_file( LOCAL_IC_FLAG,OUTFILE=lib.LOCAL_IC);
+%CNT("&last4days."d, &run_date,LOC_IC_INS_L4,INFILE=lib.LOCAL_IC);
+%CNT("&last7days."d, &run_date,LOC_IC_INS_L7,INFILE=lib.LOCAL_IC);
+%CNT("&last14days."d, &run_date,LOC_IC_INS_L14,INFILE=lib.LOCAL_IC);
+%CNT("&Last37days"d, "&Last8days"d,LOC_IC_INS_M2,INFILE=lib.LOCAL_IC);
+%CNT("&last37days."d, &run_date,LOC_IC_INS_L37,INFILE=lib.LOCAL_IC);
+%DELETE_FILE(lib,LOCAL_IC);
+
+%create_flag_file( LOCAL_FLAG,OUTFILE=lib.LOCAL);
+%CNT("&last4days."d, &run_date,LOC_INS_L4,INFILE=lib.LOCAL);
+%CNT("&last7days."d, &run_date,LOC_INS_L7,INFILE=lib.LOCAL);
+%CNT("&last14days."d, &run_date,LOC_INS_L14,INFILE=lib.LOCAL);
+%CNT("&Last37days"d, "&Last8days"d,LOC_INS_M2,INFILE=lib.LOCAL);
+%CNT("&last37days."d, &run_date,LOC_INS_L37,INFILE=lib.LOCAL);
+%DELETE_FILE(lib,LOCAL);
+
+  %create_flag_file( LOW_BLNC_DAYS,OUTFILE=lib.LOWBAL);
+%CNT_1("&last4days."d, &run_date,LOW_BLNC_INS_L4,INFILE=lib.LOWBAL);
+%CNT_1("&last7days."d, &run_date,LOW_BLNC_INS_L7,INFILE=lib.LOWBAL);
+%CNT_1("&last14days."d, &run_date,LOW_BLNC_INS_L14,INFILE=lib.LOWBAL);
+%CNT_1("&Last37days"d, "&Last8days"d,LOW_BLNC_INS_M2,INFILE=lib.LOWBAL);
+%CNT_1("&last37days."d, &run_date,LOW_BLNC_INS_L37,INFILE=lib.LOWBAL);
+%DELETE_FILE(lib,LOWBAL);
+
+
+/*Sum/Average Recharge and High Recharge variables*/
+
+
+%CREATE_RECHARGE_FILE(OUTFILE=lib.RECHARGE,EVENTDATE=EVENT_DT) ;
+%RCHRG_VALUE (OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,EVENTDATE=EVENT_DT);
+%RCHRG_VALUE (OUT=L67 , DATE1="&LAST67DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L7 , DATE1="&LAST7DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE, AMOUNT=30,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L15 , DATE1="&LAST15DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=30,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=30,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L7 , DATE1="&LAST7DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=50,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L15 , DATE1="&LAST15DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=50,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=50,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L7 , DATE1="&LAST7DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=100,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L15 , DATE1="&LAST15DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=100,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=lib.RECHARGE,AMOUNT=100,EVENTDATE=EVENT_DT);
+%DELETE_FILE(lib,RECHARGE);
+
+
+data &BASE;
+set &BASE;
+
+
+IF SUM_OG_MOU_ALL_L4>0 THEN RAT_LOC_OG_ALL_OG_MOU_L4= (SUM_LOC_OG_MOU_L4/ SUM_OG_MOU_ALL_L4); ELSE RAT_LOC_OG_ALL_OG_MOU_L4=0;
+IF SUM_OG_MOU_ALL_L7>0 THEN RAT_LOC_OG_ALL_OG_MOU_L7= (SUM_LOC_OG_MOU_L7/ SUM_OG_MOU_ALL_L7); ELSE RAT_LOC_OG_ALL_OG_MOU_L7=0;
+IF SUM_OG_MOU_ALL_L15>0 THEN RAT_LOC_OG_ALL_OG_MOU_L15= (SUM_LOC_OG_MOU_L15/ SUM_OG_MOU_ALL_L15); ELSE RAT_LOC_OG_ALL_OG_MOU_L15=0;
+IF SUM_OG_MOU_ALL_L30>0 THEN RAT_LOC_OG_ALL_OG_MOU_L30= (SUM_LOC_OG_MOU_L30/ SUM_OG_MOU_ALL_L30); ELSE RAT_LOC_OG_ALL_OG_MOU_L30=0;
+
+IF SUM_OG_MOU_ALL_L4>0 THEN RAT_STD_OG_ALL_OG_MOU_L4= (SUM_STD_OG_MOU_L4/ SUM_OG_MOU_ALL_L4); ELSE RAT_STD_OG_ALL_OG_MOU_L4=0;
+IF SUM_OG_MOU_ALL_L7>0 THEN RAT_STD_OG_ALL_OG_MOU_L7= (SUM_STD_OG_MOU_L7/ SUM_OG_MOU_ALL_L7); ELSE RAT_STD_OG_ALL_OG_MOU_L7=0;
+IF SUM_OG_MOU_ALL_L15>0 THEN RAT_STD_OG_ALL_OG_MOU_L15= (SUM_STD_OG_MOU_L15/ SUM_OG_MOU_ALL_L15); ELSE RAT_STD_OG_ALL_OG_MOU_L15=0;
+IF SUM_OG_MOU_ALL_L37>0 THEN RAT_STD_OG_ALL_OG_MOU_L37= (SUM_STD_OG_MOU_L37/ SUM_OG_MOU_ALL_L37); ELSE RAT_STD_OG_ALL_OG_MOU_L37=0;
+IF SUM_OG_MOU_ALL_M2>0 THEN RAT_STD_OG_ALL_OG_MOU_M2= (SUM_STD_OG_MOU_M2/ SUM_OG_MOU_ALL_M2); ELSE RAT_STD_OG_ALL_OG_MOU_M2=0;
+
+IF SUM_STD_OG_MOU_L4>0 THEN RAT_STD_OG_REV_MOU_L4= (SUM_STD_OG_REV_L4/ SUM_STD_OG_MOU_L4); ELSE RAT_STD_OG_REV_MOU_L4=0;
+IF SUM_STD_OG_MOU_L7>0 THEN RAT_STD_OG_REV_MOU_L7= (SUM_STD_OG_REV_L7/ SUM_STD_OG_MOU_L7); ELSE RAT_STD_OG_REV_MOU_L7=0;
+IF SUM_STD_OG_MOU_L15>0 THEN RAT_STD_OG_REV_MOU_L15= (SUM_STD_OG_REV_L15/ SUM_STD_OG_MOU_L15); ELSE RAT_STD_OG_REV_MOU_L15=0;
+IF SUM_STD_OG_MOU_L37>0 THEN RAT_STD_OG_REV_MOU_L37= (SUM_STD_OG_REV_L37/ SUM_STD_OG_MOU_L37); ELSE RAT_STD_OG_REV_MOU_L37=0;
+IF SUM_STD_OG_MOU_M2>0 THEN RAT_STD_OG_REV_MOU_M2= (SUM_STD_OG_REV_M2/ SUM_STD_OG_MOU_M2); ELSE RAT_STD_OG_REV_MOU_M2=0;
+
+IF SUM_STD_IC_MOU_L4>0 THEN RAT_STD_OG_IC_MOU_L4= (SUM_STD_OG_MOU_L4/ SUM_STD_IC_MOU_L4); ELSE RAT_STD_OG_IC_MOU_L4=999;
+IF SUM_STD_IC_MOU_L7>0 THEN RAT_STD_OG_IC_MOU_L7= (SUM_STD_OG_MOU_L7/ SUM_STD_IC_MOU_L7); ELSE RAT_STD_OG_IC_MOU_L7=999;
+IF SUM_STD_IC_MOU_L15>0 THEN RAT_STD_OG_IC_MOU_L15= (SUM_STD_OG_MOU_L15/ SUM_STD_IC_MOU_L15); ELSE RAT_STD_OG_IC_MOU_L15=999;
+IF SUM_STD_IC_MOU_L37>0 THEN RAT_STD_OG_IC_MOU_L37= (SUM_STD_OG_MOU_L37/ SUM_STD_IC_MOU_L37); ELSE RAT_STD_OG_IC_MOU_L37=999;
+IF SUM_STD_IC_MOU_M2>0 THEN RAT_STD_OG_IC_MOU_M2= (SUM_STD_OG_MOU_M2/ SUM_STD_IC_MOU_M2); ELSE RAT_STD_OG_IC_MOU_M2=999;
+
+IF SUM_LOC_IC_MOU_L4>0 THEN RAT_LOC_OG_IC_MOU_L4= (SUM_LOC_OG_MOU_L4/ SUM_LOC_IC_MOU_L4); ELSE RAT_LOC_OG_IC_MOU_L4=999;
+IF SUM_LOC_IC_MOU_L7>0 THEN RAT_LOC_OG_IC_MOU_L7= (SUM_LOC_OG_MOU_L7/ SUM_LOC_IC_MOU_L7); ELSE RAT_LOC_OG_IC_MOU_L7=999;
+IF SUM_LOC_IC_MOU_L15>0 THEN RAT_LOC_OG_IC_MOU_L15= (SUM_LOC_OG_MOU_L15/ SUM_LOC_IC_MOU_L15); ELSE RAT_LOC_OG_IC_MOU_L15=999;
+IF SUM_LOC_IC_MOU_L37>0 THEN RAT_LOC_OG_IC_MOU_L37= (SUM_LOC_OG_MOU_L37/ SUM_LOC_IC_MOU_L37); ELSE RAT_LOC_OG_IC_MOU_L37=999;
+IF SUM_LOC_IC_MOU_M2>0 THEN RAT_LOC_OG_IC_MOU_M2= (SUM_LOC_OG_MOU_M2/ SUM_LOC_IC_MOU_M2); ELSE RAT_LOC_OG_IC_MOU_M2=999;
+
+IF SUM_RTD_MOU_L7=0 then  RAT_CUST_REV_MOU_L7=999; ELSE RAT_CUST_REV_MOU_L7=SUM_REV_L7/SUM_RTD_MOU_L7;
+IF SUM_RTD_MOU_L15=0 then RAT_CUST_REV_BY_MOU_L15=999; ELSE RAT_CUST_REV_BY_MOU_L15=SUM_REV_L15/SUM_RTD_MOU_L15;
+IF SUM_RTD_MOU_L37=0 then RAT_CUST_REV_BY_MOU_L37=999; ELSE RAT_CUST_REV_BY_MOU_L37=SUM_REV_L37/SUM_RTD_MOU_L37;
+RUN;
+
+
+
+%let Last40days = %sysfunc(INTNX(Day, &run_date, -39), date9.);
+%put &Last40days.;
+
+
+/*Ratio, proportion of outgoing & incoming MOU with respect*/
+/*to home, roaming & legwise events*/
+/*ALL= HOME +ROAMING*/
+
+
+%MACRO create_file;
+     PROC SQL;
+     CREATE TABLE TEMP AS SELECT 
+                SUBS_KEY,
+                EVENT_DT, 
+                SUM(TOT_OG_HOME_MOU,0) AS TOT_OG_HOME_MOU,
+                SUM(TOT_OG_ROAMING_MOU,0)AS TOT_OG_ROAMING_MOU,
+                SUM (TOT_IC_HOME_MOU,
+                TOT_IC_RMNG_MOU,0) AS IC_MOU,
+                SUM(TOT_OG_HOME_MOU,TOT_OG_ROAMING_MOU,0) as OG_MOU,
+                SUM(LOCAL_I2I_OG_MOU,LOCAL_I2O_OG_MOU,0) AS LOCAL_OG_MOU,
+                SUM(LOCAL_I2I_OG_MOU,0) AS LOCAL_I2I_OG_MOU, 
+                SUM(ISD_OG_MOU,0) AS ISD_OG_MOU,
+                SUM(STD_I2I_OG_MOU,STD_I2O_OG_MOU,0) as STD_OG_MOU,
+                SUM(TOT_OG_HOME_REV, TOT_OG_ROAMING_REV,0) as OG_REV, 
+                SUM(LOCAL_I2I_OG_MOU, STD_I2I_OG_MOU,0) AS I2I_OG_MOU,
+                SUM(LOCAL_I2O_OG_MOU,  STD_I2O_OG_MOU, 0) AS I2O_OG_MOU,
+                SUM(TOTAL_MOU,0) AS TOTAL_MOU
+                FROM &rawdata.
+                Order by SUBS_KEY, EVENT_DT;
+     QUIT;
+%MEND;
+
+%MACRO PROP_MOU(date1, date2, out);
+           PROC SQL;
+           CREATE TABLE TEM1 as select 
+                SUBS_KEY, 
+                SUM(OG_MOU) AS OG_MOU_ALL,
+                SUM(TOT_OG_HOME_MOU) AS TOT_OG_HOME_MOU,
+                SUM(SUM(OG_MOU,IC_MOU)) as OG_IC_MOU_ALL,
+                SUM(IC_MOU) AS IC_MOU_ALL,  
+                SUM(LOCAL_OG_MOU) AS LOCAL_OG_MOU,
+                SUM(LOCAL_I2I_OG_MOU) AS LOCAL_I2I_OG_MOU,
+                SUM(OG_REV) AS OG_REV_ALL,
+                STD(OG_MOU) as SD_OG_MOU_ALL_&out. , 
+                STD(IC_MOU) as SD_IC_MOU_ALL_&out. , 
+                STD(TOTAL_MOU) as SD_RTD_MOU_&out.,
+                SUM(SUM(I2I_OG_MOU,I2O_OG_MOU)) AS  I2I_I2O_OG_MOU,
+                SUM(I2I_OG_MOU) AS I2I_OG_MOU
+                FROM TEMP 
+                WHERE  (&date1. <= EVENT_DT <= &date2. )
+                GROUP BY SUBS_KEY;
+    QUIT;
+
+           DATA TEM2;
+           SET TEM1;
+           IF OG_MOU_ALL=0 THEN RAT_HOM_MOU_ALL_&out.=0;
+           ELSE RAT_HOM_MOU_ALL_&out.= TOT_OG_HOME_MOU/OG_MOU_ALL;
+           IF OG_IC_MOU_ALL=0 THEN PROP_OG_MOU_TOT_MOU_ALL_&out.=0;
+           ELSE PROP_OG_MOU_TOT_MOU_ALL_&out.=OG_MOU_ALL/OG_IC_MOU_ALL;
+           IF IC_MOU_ALL=0 THEN RAT_OG_IC_MOU_ALL_&out.=999;
+           ELSE RAT_OG_IC_MOU_ALL_&out.=OG_MOU_ALL/IC_MOU_ALL;
+           IF LOCAL_OG_MOU=0 THEN PROP_LOC_I2I_MOU_OG_MOU_&out.=0; 
+           ELSE PROP_LOC_I2I_MOU_OG_MOU_&out.=LOCAL_I2I_OG_MOU/LOCAL_OG_MOU;
+           IF OG_MOU_ALL=0 THEN PROP_LOC_OG_MOU_ALL_&out.=0; 
+           ELSE PROP_LOC_OG_MOU_ALL_&out.=LOCAL_OG_MOU/OG_MOU_ALL;
+           IF OG_MOU_ALL=0 THEN RAT_OG_REV_OG_MOU_ALL_&out.=0; 
+           ELSE RAT_OG_REV_OG_MOU_ALL_&out.=OG_REV_ALL/OG_MOU_ALL;
+           IF I2I_I2O_OG_MOU=0 THEN PROP_I2I_OG_MOU_&out.=0;
+           ELSE PROP_I2I_OG_MOU_&out.=I2I_OG_MOU/I2I_I2O_OG_MOU;  
+           RUN;
+
+     PROC SQL;
+           CREATE TABLE abt1 AS 
+                SELECT     T1.*,
+                     T2.RAT_HOM_MOU_ALL_&out.,
+                     T2.PROP_OG_MOU_TOT_MOU_ALL_&out.,
+                     T2.RAT_OG_IC_MOU_ALL_&out.,
+                     T2.PROP_LOC_I2I_MOU_OG_MOU_&out.,
+                     T2.PROP_LOC_OG_MOU_ALL_&out.,
+                     T2.RAT_OG_REV_OG_MOU_ALL_&out.,
+                     T2.SD_OG_MOU_ALL_&out.,
+                     T2.SD_IC_MOU_ALL_&out.,
+                     T2.SD_RTD_MOU_&out.,
+                     T2.PROP_I2I_OG_MOU_&out.
+                FROM &base. T1  LEFT JOIN TEM2 T2 ON (T1.SUBS_KEY=T2.SUBS_KEY);
+     QUIT;
+
+     Data &base.;
+           set abt1;
+     run;
+
+     proc datasets lib=work nolist;
+           delete TEM1 ABT1;
+     quit;
+
+%MEND;
+
+%create_file;
+%PROP_MOU("&Last7days."d, &run_date., L7);
+%PROP_MOU("&Last15days."d, &run_date., L15);
+%PROP_MOU("&Last37days."d, &run_date., L37);
+
+/*Summation & proportion of revenue earned by Home & */
+/*Roaming outgoing voice event*/
+
+%MACRO PROPREV(OUT=,DATE1=,DATE2=);
+PROC SQL;
+   CREATE TABLE REV1_&out AS 
+   SELECT  SUBS_KEY,
+     SUM(SUM(TOT_OG_HOME_REV,0)) AS SUM_OG_HOM_REV_&out,
+     SUM(SUM(TOT_OG_ROAMING_REV,TOT_OG_HOME_REV,0)) AS SUM_HOM_RMG_REV_&out
+     FROM &rawdata WHERE &date1 <= EVENT_DT <= &date2 GROUP BY SUBS_KEY;   
+     QUIT;
+
+PROC SQL;
+CREATE TABLE REV_&out AS
+    SELECT  SUBS_KEY,
+    SUM_OG_HOM_REV_&out, SUM_HOM_RMG_REV_&out,
+    (SUM_OG_HOM_REV_&out/SUM_HOM_RMG_REV_&out ) AS PROP_OG_HOM_REV_&out 
+FROM REV1_&out ORDER  BY  SUBS_KEY;  
+
+DATA REV2_&out;
+SET REV_&out;
+    PROP_OG_HOM_REV_&out = SUM(PROP_OG_HOM_REV_&out,0);
+RUN;
+
+%MEND;
+
+%PROPREV(OUT=L7,DATE1="&LAST7DAYS"D,DATE2= &RUN_DATE);
+%PROPREV(OUT=L15,DATE1="&LAST15DAYS"D,DATE2= &RUN_DATE);
+%PROPREV(OUT=L37,DATE1="&LAST37DAYS"D,DATE2= &RUN_DATE);
+
+%MACRO PROPREV(OUT=);
+
+PROC SQL;
+create table temp(compress=yes) as
+select t1.*, T2.SUM_OG_HOM_REV_&out, 
+             T2.SUM_HOM_RMG_REV_&out,
+             T2.PROP_OG_HOM_REV_&out
+FROM &base. t1 LEFT JOIN WORK.REV2_&out t2 ON (t1.SUBS_KEY = t2.SUBS_KEY);
+quit;
+
+data &base.;
+set temp;
+run;
+
+%MEND;
+
+%PROPREV(OUT=L7);
+%PROPREV(OUT=L15);
+%PROPREV(OUT=L37);
+
+/*???????????????????????????????????????????????????????????????????????????*/
+/*??????????????????Summation of Day & Night Usage per day ??????????????????*/
+/*???????????????????????????????????????????????????????????????????????????*/
+
+PROC DATASETS LIB=WORK KILL;
+RUN;
+/**/
+/*%MACRO MOU(OUT=,DATE1=,DATE2=);*/
+/**/
+/*PROC SQL;*/
+/*     CREATE TABLE USAGE_DAY_NIGHT_&OUT  AS */
+/*    SELECT SUBS_KEY, SUM(SUM(*/
+/*          MOU_IC_LOCAL_I2O_11_6, */
+/*          MOU_IC_LOCAL_I2I_11_6,*/
+/*          MOU_IC_STD_I2I_11_6, */
+/*          MOU_OG_LOCAL_I2I_11_6,     */
+/*          MOU_OG_LOCAL_I2O_11_6, */
+/*          MOU_OG_STD_I2O_11_6,  */
+/*          MOU_OG_ISD_11_6,0)) AS NIGHT_USAGE_&out,*/
+/**/
+/*          SUM(SUM(MOU_IC_LOCAL_I2I_10_11, */
+/*          MOU_IC_LOCAL_I2I_6_7, */
+/*          MOU_IC_LOCAL_I2I_7_8, */
+/*          MOU_IC_LOCAL_I2I_8_10, */
+/*          MOU_IC_LOCAL_I2O_10_11,*/
+/*          MOU_OG_LOCAL_I2I_10_11, */
+/*          MOU_OG_ISD_10_11,MOU_OG_LOCAL_I2O_10_11,*/
+/*          MOU_IC_LOCAL_I2O_6_7, */
+/*          MOU_IC_LOCAL_I2O_7_8, */
+/*          MOU_IC_LOCAL_I2O_8_10, */
+/*          MOU_IC_LOCAL_I2I_8_10,*/
+/*          MOU_IC_STD_I2I_6_7, */
+/*          MOU_IC_STD_I2I_7_8, */
+/*          MOU_IC_STD_I2I_8_10, MOU_OG_STD_I2O_10_11, */
+/*          MOU_IC_STD_I2O_6_7, */
+/*          MOU_IC_STD_I2O_7_8, */
+/*          MOU_OG_ISD_6_7, */
+/*          MOU_OG_ISD_7_8, */
+/*          MOU_OG_ISD_8_10,*/
+/*          MOU_OG_LOCAL_I2I_6_7, */
+/*          MOU_OG_LOCAL_I2I_7_8, */
+/*          MOU_OG_LOCAL_I2I_8_10, */
+/*          MOU_OG_LOCAL_I2O_6_7, */
+/*          MOU_OG_LOCAL_I2O_7_8, */
+/*          MOU_OG_LOCAL_I2O_8_10, */
+/*          MOU_OG_STD_I2I_6_7, */
+/*          MOU_OG_STD_I2I_7_8, */
+/*          MOU_OG_STD_I2I_8_10, */
+/*          MOU_OG_STD_I2O_6_7, */
+/*          MOU_OG_STD_I2O_7_8, */
+/*          MOU_OG_STD_I2O_8_10,0)) AS DAY_USAGE_&out,*/
+/**/
+/*              SUM(CALCULATED NIGHT_USAGE_&out, CALCULATED DAY_USAGE_&out)AS TOT_USAGE_&out,*/
+/*              (CALCULATED NIGHT_USAGE_&out/ &out ) AS AVG_NIG_USG_&out FORMAT 8.2,*/
+/*              (CALCULATED DAY_USAGE_&out/ &out ) AS AVG_DAY_USG_&out FORMAT 8.2*/
+/*     FROM &rawdata. */
+/*       WHERE &DATE1 <= EVENT_DT <= &DATE2 GROUP BY SUBS_KEY ORDER BY SUBS_KEY;*/
+/*QUIT;*/
+/**/
+/*DATA usage1_&out (compress=yes);*/
+/*  SET USAGE_DAY_NIGHT_&OUT;*/
+/*  AVG_NIG_USG_L&out = sum(AVG_NIG_USG_&out,0);*/
+/*  AVG_DAY_USG_L&out = sum(AVG_DAY_USG_&out,0);*/
+/*Run;*/
+/**/
+/*%MEND;*/
+/**/
+/*%MOU(OUT=7,DATE1="&LAST7DAYS"D,DATE2= &RUN_DATE);*/
+/*%MOU(OUT=15,DATE1="&LAST15DAYS"D,DATE2= &RUN_DATE);*/
+/*%MOU(OUT=37,DATE1="&LAST37DAYS"D,DATE2= &RUN_DATE);*/
+/**/
+/**/
+/**/
+/*%MACRO MOU(OUT=);*/
+/**/
+/*PROC SQL;*/
+/*create table temp1(compress=yes) as*/
+/*select t1.*, t2.AVG_NIG_USG_L&out, t2.AVG_DAY_USG_L&out*/
+/*FROM &base. t1 LEFT JOIN usage1_&out t2 ON (t1.SUBS_KEY = t2.SUBS_KEY);*/
+/*quit;*/
+/**/
+/*data &base.;*/
+/*set temp1;*/
+/*run;*/
+/**/
+/*%MEND;*/
+/**/
+/*%MOU(OUT=7);*/
+/*%MOU(OUT=15);*/
+/*%MOU(OUT=37);*/
+
+PROC DATASETS LIB=WORK KILL;
+RUN;
+
+/*Ratio of LOCAL, STD, ISD usage*/
+/*ALL= HOME + ROAMING*/
+
+%MACRO PCT (OUT= , DATE1= , DATE2=);
+PROC SQL;
+CREATE TABLE USAGE_OG_IC_&OUT AS 
+     SELECT SUBS_KEY, SUM(SUM(TOT_OG_HOME_MOU,TOT_OG_ROAMING_MOU,0)) 
+     AS OG_MOU_ALL_&OUT,
+     SUM(SUM(TOT_IC_HOME_MOU,TOT_IC_RMNG_MOU,0)) AS IC_MOU_ALL_&OUT
+     FROM &rawdata
+     WHERE  &DATE1 <= EVENT_DT <= &DATE2 GROUP BY SUBS_KEY
+     ORDER BY SUBS_KEY;
+QUIT;
+
+%MEND PCT;
+
+%PCT(OUT=L37 , DATE1="&Last37days."d, DATE2=&run_date);
+%PCT(OUT=L7 , DATE1="&Last7days."d , DATE2=&run_date);  
+
+PROC SQL;
+   CREATE TABLE USAGE_OG_TABLE1 AS 
+   SELECT t2.subs_key, 
+      t2.OG_MOU_ALL_L7, 
+      t3.OG_MOU_ALL_L37, 
+      t2.IC_MOU_ALL_L7, 
+      t3.IC_MOU_ALL_L37
+   FROM USAGE_OG_IC_L7 t2,USAGE_OG_IC_L37 t3
+   WHERE (t2.SUBS_KEY = t3.SUBS_KEY);
+quit;
+
+DATA USAGE_OG_TABLE;
+     SET USAGE_OG_TABLE1;
+     IF OG_MOU_ALL_L37 = 0 THEN RAT_OG_MOU_ALL_L7_L37 = 0;
+     ELSE RAT_OG_MOU_ALL_L7_L37 = OG_MOU_ALL_L7/OG_MOU_ALL_L37;
+     IF IC_MOU_ALL_L37 = 0 THEN RAT_IC_MOU_ALL_L7_L37 = 0;
+     ELSE RAT_IC_MOU_ALL_L7_L37 =IC_MOU_ALL_L7/IC_MOU_ALL_L37;
+RUN;
+
+PROC SQL;
+   CREATE TABLE ABT_prop_sum (compress=yes) AS 
+   SELECT t1.*,
+          t2.RAT_OG_MOU_ALL_L7_L37, 
+          t2.RAT_IC_MOU_ALL_L7_L37
+      FROM &base. t1 LEFT JOIN USAGE_OG_TABLE t2 ON (t1.SUBS_KEY = t2.SUBS_KEY);
+QUIT;
+
+data &base.;
+set ABT_prop_sum;
+run;
+
+
+
+/*???????????????????????????????????????????????????????????????????????????*/
+/*?????????????????????Standerdised decremental revenue??????????????????????*/
+/*???????????????????????????????????????????????????????????????????????????*/
+
+%Let Var = TOT_OG_HOME_REV,TOT_OG_ROAMING_REV;
+
+PROC SQL;
+     CREATE TABLE TEMP AS 
+           SELECT     SUBS_KEY, 
+                     EVENT_DT,
+                     sum(&var.,0) as VAR  
+           FROM &rawdata. ORDER BY SUBS_KEY;
+QUIT;
+
+%MACRO DECST( DATE1= , DATE2=   , OUT=);
+PROC SQL;
+   CREATE TABLE DEC_IND1_&OUT AS 
+   SELECT SUBS_KEY, 
+            VAR AS DEC1_&OUT
+      FROM TEMP
+      WHERE &DATE1 <=  EVENT_DT <= &DATE2 ORDER BY SUBS_KEY;
+
+       CREATE TABLE DEC_IND_&OUT AS 
+    SELECT SUBS_KEY, 
+            SUM(DEC1_&OUT) AS DEC_&OUT, 
+          AVG(DEC1_&OUT) AS AVG_DEC_&OUT
+      FROM DEC_IND1_&OUT
+    GROUP  BY SUBS_KEY;
+
+    SELECT AVG(AVG_DEC_&OUT) INTO:SAMP_MEAN FROM DEC_IND_&OUT ;
+   SELECT STD(AVG_DEC_&OUT) INTO:SAMP_STD FROM DEC_IND_&OUT ;
+  %LET SAMP_MEAN = &SAMP_MEAN;
+  %LET SAMP_STD = &SAMP_STD;
+    
+  CREATE TABLE DEC_TABLE_&OUT AS 
+    SELECT SUBS_KEY, DEC_&OUT,AVG_DEC_&OUT, &SAMP_STD AS SAMP_STD,
+     &SAMP_MEAN AS SAMP_MEAN,
+     (AVG_DEC_&OUT - &SAMP_MEAN) AS DIFF,
+     (CALCULATED DIFF /&SAMP_STD) AS SND_DEC_&OUT FORMAT 8.2
+FROM DEC_IND_&OUT ORDER  BY SUBS_KEY;
+quit;
+
+%MEND DECST;
+
+%DECST ( DATE1= "&Last7days"D  , DATE2= &run_date  , OUT=L7);
+%DECST ( DATE1= "&Last15days"D  , DATE2= &run_date  , OUT=L15);
+
+PROC SQL;
+   CREATE TABLE SND_DEC_TAB (compress=yes) AS 
+   SELECT t1.*, 
+          t2.SND_DEC_L7, 
+          t3.SND_DEC_L15
+      FROM &base. t1 
+            LEFT JOIN WORK.DEC_TABLE_L7 t2 ON (t1.SUBS_KEY = t2.SUBS_KEY) 
+            LEFT JOIN WORK.DEC_TABLE_L15 t3 ON (t1.SUBS_KEY = t3.SUBS_KEY);
+QUIT;
+
+PROC DATASETS LIB=WORK NOLIST;
+DELETE  DEC_: ;
+QUIT;
+
+DATA &base.;
+SET SND_DEC_TAB;
+RUN;*/;
+
+proc contents data=&base order=varnum;run;
+
+
+
+/*???????????????????????????????????????????????????????????????????????????*/
+/*??????Outgoing & Incoming SMS count, count of unique OG & IC callers???????*/
+/*???????????????????????????????????????????????????????????????????????????*/
+
+
+%MACRO dist (OUT= , DATE1= , DATE2=);
+PROC SQL;
+CREATE TABLE dis_&out  AS 
+   SELECT SUBS_KEY, 
+   SUM(SUM(LOCAL_OG_I2I_CNT_CALLERS,LOCAL_OG_I2O_CNT_CALLERS,
+   STD_OG_I2I_CNT_CALLERS,STD_OG_I2O_CNT_CALLERS,ISD_OG_CNT_CALLERS,0)) AS CNT_OG_UNQ_ANY_&out,
+   SUM(SUM(IC_CNT_CALLS,0)) AS CNT_IC_ANY_&out,
+   SUM(SUM(OG_CNT_CALLS,0)) AS CNT_OG_ANY_&out     
+   FROM &rawdata.
+   WHERE &date1 <=  EVENT_DT <= &date2 GROUP BY SUBS_KEY ORDER BY SUBS_KEY;
+QUIT;
+
+proc sql;
+create table temp1(compress=yes) as
+select t1.*, T2.CNT_OG_UNQ_ANY_&out,
+T2.CNT_IC_ANY_&out, T2.CNT_OG_ANY_&out
+FROM &base. t1 LEFT JOIN WORK.dis_&out t2 ON (t1.SUBS_KEY = t2.SUBS_KEY);
+quit;
+
+data &base.;
+set temp1;
+run;
+
+%MEND dist;
+
+%DIST(OUT=L7 , DATE1="&Last7days."d  , DATE2=&run_date.);
+%DIST(OUT=L37 , DATE1="&Last37days."d , DATE2=&run_date.);
+
+
+data lib.backup;
+set &base;
+run;
+
+
+
+proc contents data=lib.backup order=varnum;run;
+
+
+%DIST(OUT=L15 , DATE1="&Last15days."d , DATE2=&run_date.);
+%DIST(OUT=M2 , DATE1="&Last37days"D , DATE2 = "&Last8days"D);
+%DIST(OUT=M2D8_M2D17 , DATE1="&Last30days"D , DATE2 = "&Last21days"D);
+
+
+%DIST(OUT=M1D28_M2D17 , DATE1="&Last40days"D , DATE2 = "&Last21days"D);
+%DIST(OUT=L20 , DATE1="&Last20days"D , DATE2 = &run_date.);
+
+
+
+PROC DATASETS LIB=WORK NOLIST;
+DELETE  TEMP DISTINCT_CALLS_OG_WK1 DISTINCT_CALLS_OG_WK2 DISTINCT_CALLS_OG_WK3 DISTINCT_CALLS_OG_WK4 DISTINCT_CALLS_OG_M2_37 DISTINCT_CALLS_OG_M2_30;
+QUIT;
+
+DATA ABT_RAT_CALLS;
+SET &base.;
+
+IF CNT_IC_ANY_M2= 0 THEN RAT_CNT_IC_ANY_L7_M2 = 999;
+ELSE RAT_CNT_IC_ANY_L7_M2 = CNT_IC_ANY_L7/CNT_IC_ANY_M2;
+
+IF CNT_OG_ANY_M2= 0 THEN RAT_CNT_OG_ANY_L7_M2 = 999;
+ELSE RAT_CNT_OG_ANY_L7_M2 = CNT_OG_ANY_L7/CNT_OG_ANY_M2;
+
+IF CNT_IC_ANY_L7 = 0  THEN RAT_OG_IC_ANY_L7 = 999; 
+ELSE RAT_OG_IC_ANY_L7 = CNT_OG_ANY_L7 / CNT_IC_ANY_L7 ;
+
+IF CNT_IC_ANY_L15 = 0  THEN RAT_OG_IC_ANY_L15 = 999; 
+ELSE RAT_OG_IC_ANY_L15 = CNT_OG_ANY_L15 / CNT_IC_ANY_L15 ;
+
+
+IF CNT_OG_ANY_M1D28_M2D17= 0 THEN RAT_CNT_OG_ANY_L20_M1D28M2D17 = 999;
+ELSE RAT_CNT_OG_ANY_L20_M1D28M2D17 = CNT_OG_ANY_L20/CNT_OG_ANY_M1D28_M2D17;
+RUN;
+
+
+data &base.;
+set abt_rat_calls;
+drop CNT_IC_ANY_L20
+CNT_IC_ANY_M2
+CNT_IC_ANY_M1D28_M2D17
+CNT_IC_ANY_M1D8_M2D7
+CNT_IC_ANY_M2D8_M2D17
+CNT_IC_SMS_ANY_L20
+CNT_IC_SMS_ANY_M2
+CNT_IC_SMS_ANY_M1D28_M2D17
+CNT_IC_SMS_ANY_M1D8_M2D7
+CNT_IC_SMS_ANY_M2D8_M2D17
+CNT_OG_ANY_L20
+CNT_OG_ANY_M2
+CNT_OG_ANY_M1D28_M2D17
+CNT_OG_ANY_M1D8_M2D7
+CNT_OG_ANY_M2D8_M2D17
+CNT_OG_UNQ_ANY_L20
+CNT_OG_UNQ_ANY_M2
+CNT_OG_UNQ_ANY_M1D28_M2D17
+CNT_OG_UNQ_ANY_M1D8_M2D7
+CNT_OG_UNQ_ANY_M2D8_M2D17
+CNT_SMS_OG_ANY_L20
+CNT_SMS_OG_ANY_M2
+CNT_SMS_OG_ANY_M1D28_M2D17
+CNT_SMS_OG_ANY_M1D8_M2D7
+CNT_SMS_OG_ANY_M2D8_M2D17
+CNT_SMS_TOT_L20
+CNT_SMS_TOT_M2
+CNT_SMS_TOT_M1D28_M2D17
+CNT_SMS_TOT_M1D8_M2D7
+CNT_SMS_TOT_M2D8_M2D17;
+run;
+
+/*???????????????????????????????????????????????????????????????????????????*/
+/*?????????????? Count of usage days in past days from rundate ??????????????*/
+/*???????????????????????????????????????????????????????????????????????????*/
+
+
+data lib.backup1;
+set &base;
+run;
+
+PROC DATASETS LIB=WORK KILL;
+RUN;
+
+%macro nouse(out=,date1=,date2=);
+
+proc sql;
+     create table up_SAMPF_&out as
+     select subs_key,EVENT_DT, usage_day_flag, 
+     case when USAGE_DAY_FLAG = 'Y' then 0 else 1 end as USAGE_DAY_TAG 
+from &rawdata where &date1 <= EVENT_DT <= &date2
+order by SUBS_KEY ,EVENT_DT;
+quit;
+
+proc sql;
+     create table NOUSE_&out as
+     select subs_key, sum(SUM(USAGE_DAY_TAG,0)) AS TOT_CNT_DAY_NO_MOU_&out
+     from up_SAMPF_&out
+GROUP BY SUBS_KEY ;
+quit;
+
+DATA LAGTAG_&out;
+     SET up_SAMPF_&out;
+     BY SUBS_KEY;
+     IF FIRST.SUBS_KEY THEN FIRSTSUBS = 1;
+     IF LAST.SUBS_KEY THEN LASTSUBS = 1;
+     IF FIRST.SUBS_KEY OR USAGE_DAY_TAG  NE LAG1(USAGE_DAY_TAG ) OR USAGE_DAY_TAG = 0 THEN COUNT1 = 0;
+     ELSE COUNT1 + 1;
+RUN;
+
+
+DATA LAGTAG2_&out;
+MERGE  LAGTAG_&out(FIRSTOBS = 2 RENAME=(COUNT1 = NEXT_COUNT1)) LAGTAG_&out;
+RUN;
+
+
+DATA LAGTAG3_&out;
+SET LAGTAG2_&out;
+IF NEXT_COUNT1 = 0 AND COUNT1 > 0 THEN DUR = COUNT1 + 1;
+ELSE DUR = 0;
+DROP FIRSTSUBS LASTSUBS NEXT_COUNT1;
+RUN;
+
+
+DATA LAGTAG4_&out;
+SET LAGTAG3_&out;
+WHERE DUR <> 0;
+STARTDATE = INTNX('DAY',EVENT_DT, -DUR);
+LASTDATE = EVENT_DT;
+FORMAT STARTDATE LASTDATE DATE9.;
+RUN;
+
+
+PROC SQL;
+CREATE TABLE NUMNOUSAGE_&out AS 
+SELECT
+SUBS_KEY,
+COUNT(DUR) AS CNT_DAY_NO_MOU_&out FORMAT 10.0,
+AVG(DUR) AS AVG_CNT_DAY_NO_MOU_&out FORMAT 10.2,
+MAX(DUR) AS MAX_CNT_DAY_NO_MOU_&out FORMAT 10.0
+FROM LAGTAG4_&out
+GROUP BY SUBS_KEY;
+QUIT;
+
+DATA A;
+MERGE &base.(IN=A) NOUSE_&out(IN=B) NUMNOUSAGE_&out(IN=C);
+BY SUBS_KEY;
+IF A;
+RUN;
+
+DATA ABT_&out;
+  SET A /*ABT23_&out*/;
+
+     IF CNT_DAY_NO_MOU_&out = . THEN CNT_DAY_NO_MOU_&out = 0;
+     IF AVG_CNT_DAY_NO_MOU_&out = . THEN AVG_CNT_DAY_NO_MOU_&out= 0;
+     IF MAX_CNT_DAY_NO_MOU_&out = . THEN MAX_CNT_DAY_NO_MOU_&out= 0;
+     IF TOT_CNT_DAY_NO_MOU_&out = 0 THEN RAT_MAX_CNT_DAY_NOMOU_&out = 0; 
+           ELSE RAT_MAX_CNT_DAY_NOMOU_&out = MAX_CNT_DAY_NO_MOU_&out/TOT_CNT_DAY_NO_MOU_&out;
+IF TOT_CNT_DAY_NO_MOU_L30 = 0 THEN RAT_CNT_DAY_NO_MOU_L7_L30=99;
+ELSE RAT_CNT_DAY_NO_MOU_L7_L30 = TOT_CNT_DAY_NO_MOU_L7/TOT_CNT_DAY_NO_MOU_L30;
+
+RUN;
+
+%mend;
+
+%nouse(out=L30,date1="&last30days."d,date2=&run_date);
+
+data &base.;
+set ABT_L30;
+run;
+%nouse(out=L7,date1="&last7days."d,date2=&run_date);
+data &base.;
+set ABT_L7;
+run;
+%nouse(out=L15,date1="&last15days."d,date2=&run_date);
+data &base.;
+set ABT_L15;
+run;
+
+
+
+/*???????????????????????????????????????????????????????????????????????????*/
+/*???????????????? Count of outgoing home & revenue SMS count ???????????????*/
+/*???????????????????????????????????????????????????????????????????????????*/
+
+
+
+
+PROC DATASETS LIB=WORK KILL;
+RUN;
+
+
+
+%MACRO create_file;
+     PROC SQL;
+           CREATE TABLE TEMP AS
+                SELECT     SUBS_KEY,
+                     EVENT_DT,
+                     SUM(TOT_IC_SMS_CNT,0) AS TOT_IC_SMS_CNT,
+                     SUM(TOT_OG_SMS_HOME_CNT,0) AS TOT_OG_SMS_HOME_CNT,
+                     SUM(TOT_OG_SMS_ROAMING_CNT,0) AS TOT_OG_SMS_ROAMING_CNT
+                FROM &rawdata. 
+                     GROUP BY SUBS_KEY
+                           ORDER BY SUBS_KEY;
+     QUIT;
+%MEND;
+
+%MACRO SMS_CNT(date1, date2, out);
+
+
+     PROC SQL;
+           CREATE TABLE TEM1 AS 
+                SELECT 
+                     SUBS_KEY,
+                     SUM(TOT_IC_SMS_CNT) AS CNT_SMS_IC_ALL_&out.,
+                     SUM(SUM(TOT_OG_SMS_HOME_CNT,TOT_OG_SMS_ROAMING_CNT)) AS CNT_SMS_OG_ALL_&out.,
+                     SUM(SUM(TOT_OG_SMS_HOME_CNT,TOT_OG_SMS_ROAMING_CNT,TOT_IC_SMS_CNT)) AS CNT_SMS_TOT_ALL_&out.
+                FROM TEMP
+                           WHERE EVENT_DT BETWEEN &date1. and &date2.
+                     GROUP BY SUBS_KEY;
+     quit;
+
+     PROC SQL;
+           CREATE TABLE abt1 AS 
+                SELECT     T1.*,
+                     T2.CNT_SMS_OG_ALL_&out.,
+                     T2.CNT_SMS_TOT_ALL_&out.
+                FROM &base. T1  LEFT JOIN TEM1 T2 ON (T1.SUBS_KEY=T2.SUBS_KEY);
+     QUIT;
+
+     data &base.;
+           set abt1;
+     run;
+
+     proc datasets lib=work nolist;
+           delete TEM1;
+     quit;
+
+%MEND;
+
+%create_file;
+%SMS_CNT("&last7days"d, &run_date., L7);
+%SMS_CNT("&last15days"d, &run_date., L15);
+%SMS_CNT("&last37days"d, &run_date., L37);
+
+
+
+/*\*??????????????????????????????????????*\*/
+/*\*??????? Days since last recharge ?????*\*/
+/*\*??????????????????????????????????????*\*/
+
+
+PROC SQL;
+   CREATE TABLE WORK.RCHRG_day AS 
+   SELECT  
+          T1.SUBS_KEY, 
+          T1. EVENT_DT,  
+      SUM(T1.RCHG_CNT_PAPER ,T1.RCHG_CNT_V_TOP_UP,0) AS CNT_TOT_RCHRG
+      FROM &rawdata T1  WHERE  (("&Last67days"D <= EVENT_DT <= &run_date ) and (calculated CNT_TOT_RCHRG ne 0 or .))
+order by SUBS_KEY, EVENT_DT;
+quit;
+DATA work.day_last_rchg;
+SET work.RCHRG_day ;
+BY  SUBS_KEY ; 
+  IF last.SUBS_KEY;    
+run;
+
+data work.day_last_rchg;
+set work.day_last_rchg;
+DS_RCH_L67 = intck ('day', EVENT_DT,&run_date );
+run;
+
+PROC SQL;
+   CREATE TABLE ABT_DS_RCH (compress=binary) AS 
+   SELECT t1.*,
+             t2.DS_RCH_L67             
+      FROM &base. t1 LEFT JOIN WORK.DAY_LAST_RCHG t2 ON (t1.SUBS_KEY = t2.SUBS_KEY)
+order by t1.subs_key;
+QUIT;
+
+data &base. (compress=binary);
+  set ABT_DS_RCH;
+  if DS_RCH_L67 = . then DS_RCH_L67 = 99;
+  run;
+
+
+
+/*\*??????????????????????????????????????*\*/
+/*\*??????? Days since last usage    ?????*\*/
+/*\*??????????????????????????????????????*\*/
+
+
+PROC SQL;
+CREATE TABLE SAMPLE_RATED_total_mou (keep = subs_key event_dt total_mou_N) AS 
+ SELECT *, total_mou AS total_mou_N FORMAT 8.2 
+FROM &rawdata where event_dt between "&Last37days"D and &run_date 
+and total_mou > 0
+ORDER BY SUBS_KEY, EVENT_DT;
+QUIT;
+
+DATA FIRSTREC(RENAME=(total_mou_N = FIRST_USAGE_MOU_LST37D)) 
+  LASTREC(RENAME=(total_mou_N = LST_MOU_L37));
+SET SAMPLE_RATED_total_mou;
+  BY SUBS_KEY EVENT_DT;
+  IF FIRST.SUBS_KEY THEN OUTPUT FIRSTREC;
+  IF LAST.SUBS_KEY THEN OUTPUT LASTREC;
+  DROP total_mou;
+RUN;
+
+data LASTREC;
+set LASTREC;
+DS_USG_L37 = intck('day' ,event_dt, &run_date); run;
+
+proc sql;
+  create table ABT_DS_USG (compress =yes) as
+  select t1.*, t2.DS_USG_L37
+    FROM &BASE. t1 LEFT JOIN LASTREC t2 ON (t1.SUBS_KEY = t2.SUBS_KEY);
+QUIT;
+
+DATA &BASE.;
+SET ABT_DS_USG;
+RUN;
+
+DATA &BASE.;
+set &BASE.;
+if DS_USG_L37 = . then DS_USG_L37=99;
+run;
+
+
+PROC DATASETS LIB=WORK NOLIST;
+     DELETE ABT_DS_USG LASTREC SAMPLE_RATED_total_mou FIRSTREC;
+QUIT;
+
+/*Days Since OG Usage*/
+
+
+  
+PROC SQL;
+CREATE TABLE SAMPLE_RATED_total_mou (keep = subs_key event_dt TOTAL_OG_MOU_N) AS 
+ SELECT *, SUM(TOT_OG_HOME_MOU,TOT_OG_ROAMING_MOU,0) AS TOTAL_OG_MOU_N FORMAT 8.2 
+FROM &rawdata where event_dt between "&Last30days"D and &run_date 
+and SUM(TOT_OG_HOME_MOU,TOT_OG_ROAMING_MOU,0) > 0
+ORDER BY SUBS_KEY, EVENT_DT;
+QUIT;
+
+DATA FIRSTREC(RENAME=(TOTAL_OG_MOU_N = FIRST_USAGE_MOU_LST30D)) 
+  LASTREC(RENAME=(TOTAL_OG_MOU_N = LST_MOU_L30));
+  SET SAMPLE_RATED_total_mou;
+  BY SUBS_KEY EVENT_DT;
+IF FIRST.SUBS_KEY THEN OUTPUT FIRSTREC;
+  IF LAST.SUBS_KEY THEN OUTPUT LASTREC;
+  DROP TOTAL_OG_MOU_N;
+RUN;
+
+data LASTREC;
+set LASTREC;
+DS_OG_USG_L30 = intck('day' ,event_dt, &run_date); run;
+
+
+
+
+proc sql;
+  create table ABT_DS_USG (compress =yes) as
+  select t1.*, t2.DS_OG_USG_L30
+    FROM &BASE. t1 LEFT JOIN LASTREC t2 ON (t1.SUBS_KEY = t2.SUBS_KEY);
+QUIT;
+
+DATA &BASE.;
+SET ABT_DS_USG;
+RUN;
+
+DATA &BASE.;
+set &BASE.;
+if DS_OG_USG_L30 = . then DS_OG_USG_L30=30;
+run;
+
+
+PROC DATASETS LIB=WORK NOLIST;
+     DELETE ABT_DS_USG LASTREC SAMPLE_RATED_total_mou FIRSTREC;
+QUIT;
+
+
+/*\*?????????????????????????????????????*\*/
+/*\*??????? No usage days comparison?????*\*/
+/*\*?????????????????????????????????????*\*/
+
+proc sql;
+     create table up_SAMPF as
+
+     select subs_key,EVENT_DT, usage_day_flag, 
+
+     case when (USAGE_DAY_FLAG = 'Y' AND ("&Last30days"D <= EVENT_DT <= &run_date)) then 1 else 0 end as USAGE_DAY_TAG_L30,
+
+     case when (USAGE_DAY_FLAG = 'Y' AND ("&Last7days"D <= EVENT_DT <= &run_date)) then 1 else 0 end as USAGE_DAY_TAG_L7,
+
+     case when (USAGE_DAY_FLAG = 'Y' AND ("&Last37days."D <=EVENT_DT<= "&Last8days."D)) then 1 else 0 end as USAGE_DAY_TAG_M2
+
+from &rawdata where "&Last37days"D <= EVENT_DT <= &run_date
+
+order by SUBS_KEY, EVENT_DT;
+
+quit;
+
+proc sql;
+     create table NOUSE as
+
+     select subs_key, 30 - sum(SUM(USAGE_DAY_TAG_L30,0)) AS TOT_CNT_DAY_NO_MOU_L30,
+     30-sum(SUM(USAGE_DAY_TAG_M2,0)) AS TOT_CNT_DAY_NO_MOU_M2,
+     7-sum(SUM(USAGE_DAY_TAG_L7,0)) AS TOT_CNT_DAY_NO_MOU_L7
+     from up_SAMPF
+
+GROUP BY SUBS_KEY 
+ORDER BY SUBS_KEY;
+
+quit;
+
+DATA NOUSE;
+SET NOUSE;
+IF TOT_CNT_DAY_NO_MOU_M2 = 0 THEN RAT_CNT_DAY_NO_MOU_L7_M2=99;
+ELSE RAT_CNT_DAY_NO_MOU_L7_M2 = TOT_CNT_DAY_NO_MOU_L7/TOT_CNT_DAY_NO_MOU_M2;
+RUN;
+
+DATA ABT_NOUSE;
+MERGE &BASE.  NOUSE;
+BY SUBS_KEY;
+RUN;
+
+DATA &BASE.;
+SET ABT_NOUSE;
+RUN;
+
+data lib.backup2;
+set &base;
+run;
+
+/*\*????????????????????????????????????????????????????*\*/
+/*\*??????? Proportion of home and roaming revenue ?????*\*/
+/*\*????????????????????????????????????????????????????*\*/
+
+
+%macro prop_home (out=, date1=, date2=);
+
+PROC SQL;
+   CREATE TABLE work.REV1 AS 
+   SELECT  SUBS_KEY,
+     SUM(SUM(TOT_OG_HOME_REV,0)) AS SUM_OG_HOM_REV_&OUT FORMAT 8.2,
+     SUM(SUM(TOT_OG_HOME_REV,TOT_OG_ROAMING_REV,0))AS SUM_REV_ALL FORMAT 8.2
+     FROM &rawdata 
+     WHERE &DATE1 <= EVENT_DT <= &DATE2 GROUP BY SUBS_KEY;    
+
+CREATE TABLE WORK.REV AS
+    SELECT  SUBS_KEY,
+    SUM_OG_HOM_REV_&OUT, SUM_REV_ALL,
+    (SUM_OG_HOM_REV_&OUT/SUM_REV_ALL) AS PROP_HOM_REV_ALL_&OUT FORMAT 8.2
+FROM work.REV1 ORDER  BY  SUBS_KEY;  
+QUIT;
+
+DATA WORK.REV;
+SET WORK.REV;
+    PROP_HOM_REV_ALL_&OUT = SUM(PROP_HOM_REV_ALL_&OUT,0);
+RUN;
+
+     PROC SQL;
+     CREATE TABLE ABT_REV (compress=binary) AS 
+     SELECT t1.*, 
+               t2.PROP_HOM_REV_ALL_&OUT
+           FROM &BASE. t1 LEFT JOIN WORK.REV t2 ON (t1.SUBS_key = t2.SUBS_key);
+     QUIT;
+
+    DATA &BASE. (compress=binary);
+    SET ABT_REV;
+    Run;
+%MEND;
+%prop_home (out=L7, date1="&Last7days."d, date2=&run_date);
+%prop_home (out=L15, date1="&Last15days."d, date2=&run_date);
+%prop_home (out=L37, date1="&Last37days."d, date2=&run_date);
+
+/*IC,OG MOU Contribution*/
+/*ANY= LOCAL+STD+ISD--->>LEG WISE*/
+
+
+%MACRO PROP_IC_OG (OUT=, DATE1= ,DATE2=);
+PROC SQL;
+CREATE TABLE WORK.IC_OG_RATIO AS 
+     SELECT SUBS_KEY, SUM(SUM(LOCAL_I2I_IC_MOU,LOCAL_I2O_IC_MOU,STD_I2I_IC_MOU,STD_I2O_IC_MOU,0)) AS SUM_IC_MOU_ANY_&OUT,
+     SUM(SUM(LOCAL_I2I_OG_MOU,LOCAL_I2O_OG_MOU,STD_I2O_OG_MOU,STD_I2I_OG_MOU,0))AS SUM_OG_MOU_ANY_&OUT,
+     (CALCULATED SUM_IC_MOU_ANY_&OUT / CALCULATED SUM_OG_MOU_ANY_&OUT) AS  RATIO_IC_OG_MOU_ANY,
+     SUM(SUM (LOCAL_I2I_OG_MOU,LOCAL_I2O_OG_MOU,STD_I2O_OG_MOU,STD_I2I_OG_MOU,
+     LOCAL_I2I_IC_MOU,LOCAL_I2O_IC_MOU,STD_I2I_IC_MOU,STD_I2O_IC_MOU,0)) AS TOT_MOU_ANY,
+     ((CALCULATED SUM_OG_MOU_ANY_&OUT / CALCULATED TOT_MOU_ANY)*100) AS PROP_OG_MOU_ANY_&OUT,
+     ((CALCULATED SUM_IC_MOU_ANY_&OUT / CALCULATED TOT_MOU_ANY)*100) AS PROP_IC_MOU_ANY_&OUT
+
+     FROM &rawdata
+     WHERE  &DATE1 <= EVENT_DT <= &DATE2 GROUP BY SUBS_KEY 
+     ORDER BY SUBS_KEY;
+
+QUIT;
+data WORK.IC_OG_RATIO;
+   set WORK.IC_OG_RATIO;
+   PROP_OG_MOU_ANY_&OUT = sum( PROP_OG_MOU_ANY_&OUT ,0);
+run;
+
+     PROC SQL;
+     CREATE TABLE ABT_IC_OG (compress=binary) AS 
+     SELECT t1.*, 
+               t2.PROP_OG_MOU_ANY_&OUT,
+               T2.SUM_IC_MOU_ANY_&OUT,
+                  T2.SUM_OG_MOU_ANY_&OUT
+           FROM &BASE. t1 LEFT JOIN IC_OG_RATIO t2 ON (t1.SUBS_key = t2.SUBS_key);
+     QUIT;
+
+    DATA &BASE. (compress=binary);
+    SET ABT_IC_OG;
+    Run;
+
+%MEND;
+
+%PROP_IC_OG (out=L7, date1="&Last7days."d, date2=&run_date);
+%PROP_IC_OG (out=L15, date1="&Last15days."d, date2=&run_date);
+%PROP_IC_OG (out=L37, date1="&Last37days."d, date2=&run_date);
+
+
+/*Weekday and Weekend Revenue*/
+
+
+
+DATA  SUBS_KEY_EV_DT;
+     SET &rawdata;
+     WEEKDAY_SAMPLE = WEEKDAY(EVENT_DT);
+     WEEK_ROLL =CEIL(DAY(EVENT_DT)/7);
+
+     IF WEEKDAY_SAMPLE  IN(1,7) THEN
+           FLAG = 'WKEND_AVG_rev';
+     ELSE IF WEEKDAY_SAMPLE  IN(2,3,5,4,6) THEN
+           FLAG = 'WKDAY_AVG_rev';
+RUN;
+
+PROC SQL;
+     CREATE TABLE TR_RATED3 AS
+
+     SELECT SUBS_KEY,FLAG, AVG(SUM(cust_rev,0)) AS AVG_rev FORMAT 8.2 
+
+     FROM SUBS_KEY_EV_DT GROUP BY SUBS_KEY, FLAG ORDER BY SUBS_KEY;
+QUIT;
+
+PROC TRANSPOSE DATA=TR_RATED3 OUT=WKDWKE;
+     BY SUBS_KEY;
+     VAR AVG_rev;
+     ID FLAG;
+RUN;
+
+PROC SQL;
+     CREATE TABLE ABT_wk (compress =yes) AS 
+
+     SELECT T1.*,
+
+           t2.WKDAY_AVG_rev,
+
+           t2.WKEND_AVG_rev
+
+     FROM &base. T1 LEFT JOIN WKDWKE T2 ON (T1.SUBS_KEY = T2.SUBS_KEY);
+QUIT;
+
+DATA &base.;
+     Set ABT_wk;
+
+     if WKEND_AVG_rev = 0 and WKDAY_AVG_rev = 0 then
+           RAT_WKD_WKE_REV =0;
+     else RAT_WKD_WKE_REV = WKEND_AVG_rev/(WKEND_AVG_rev + WKDAY_AVG_rev);
+     FORMAT RAT_WKD_WKE_REV 8.2;
+RUN;
+
+
+
+
+**************************************************************;
+*LOW BALANCE FOR LONG DAYS;
+* 
+**************************************************************;
+
+%MACRO LBLNC ( DATE1= , DATE2= , OUT= );
+PROC SQL;
+
+   CREATE TABLE LOW_BLNC_CNT_&OUT AS 
+   SELECT SUBS_KEY,
+         
+      
+
+            (COUNT(LOW_BLNC_DAYS)) AS CNT_LOW_BLNC_INS_&OUT
+      FROM &rawdata.  
+       WHERE (LOW_BLNC_DAYS =1 AND &DATE1 <= EVENT_DT <= &DATE2)
+      GROUP BY  SUBS_KEY
+       ORDER BY  SUBS_KEY;
+
+QUIT;
+
+  PROC SQL;
+           CREATE TABLE abt_lowbal AS 
+                SELECT     T1.*,
+                     T2.CNT_LOW_BLNC_INS_&OUT.
+                           
+                FROM &base. T1  LEFT JOIN LOW_BLNC_CNT_&OUT T2 ON (T1.SUBS_KEY=T2.SUBS_KEY);
+     QUIT;
+     data abt_lowbal;
+     set abt_lowbal;
+     if CNT_LOW_BLNC_INS_&OUT. =. then CNT_LOW_BLNC_INS_&OUT.=0;
+     run;
+
+     data &base.;
+           set abt_lowbal;
+     run;
+
+
+
+     proc datasets lib=work nolist;
+           delete LOW_BLNC_CNT_&OUT;
+     quit;
+
+%MEND LBLNC ;
+%LBLNC ( DATE1="&Last7days."D ,DATE2= &run_date., OUT=L7);
+%LBLNC ( DATE1="&Last15days."D ,DATE2= &run_date. , OUT=L15);
+%LBLNC ( DATE1="&Last30days."D ,DATE2= &run_date. , OUT=L30);
+
+
+proc means data=&base ;run;

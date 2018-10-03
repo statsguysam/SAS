@@ -1,0 +1,220 @@
+
+libname sshikh'/sasdata3/SAS_MINING/egusers/sshikh';
+
+/********************Code for ABT generation*********************/
+
+%Let Base=sshikh.DATA_DIU_TN_ABT_VOICE;
+%Let rawdata=sshikh.DATA_DIU_TN_MART_X_Voice_1;
+%Let rawdatatest=sshikh.DATA_DIU_TN_SUBS_KEY_VOICE;
+%Let run_date = '12OCT2017'D;
+
+options symbolgen mprint macrogen;
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/VINTAGE.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/CREATEFILE.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/SUM_RAT_PCT.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/INS_ALL_FLAGVAR.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/LOW_ZERO_MOU_REV.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/LOWBAL_DAYS.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/AVG_SUM_SD.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/SLOPE.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/SD_X_DB_L36.sas';
+%include '/sasdata3/SAS_MINING/egusers/priban/Codes_Priban/RECHARGE_VALUE_HIGHRECHARGE.sas';
+
+data &rawdatatest;
+set &rawdata (keep=subs_key);
+run;
+
+proc sort data=&rawdatatest nodupkey; 
+by subs_key; 
+run;
+
+data &base;
+set &rawdatatest;
+run;
+
+/*TOTAL_MOU*/
+
+%create_file(TOTAL_MOU,OUTFILE=sshikh.RTD_MOU);         
+%SUM_VINTAGE(RTD_MOU,INFILE=sshikh.RTD_MOU);       
+%PCT_CHG(RTD_MOU);
+%SUM("&Last4days"d, &run_date,RTD_MOU_L4,INFILE=sshikh.RTD_MOU);
+%SUM("&Last7days"d, &run_date,RTD_MOU_L7,INFILE=sshikh.RTD_MOU);
+%SUM("&Last15days"d, &run_date,RTD_MOU_L15,INFILE=sshikh.RTD_MOU);
+%SUM("&Last37days"d, "&Last8days"d,RTD_MOU_M2,INFILE=sshikh.RTD_MOU);
+%SUM("&Last37days"d, &run_date,RTD_MOU_L37,INFILE=sshikh.RTD_MOU);
+%SLOPE ( INFILE=sshikh.RTD_MOU, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=RTD_MOU , OUT=RTD_MOU_L7);
+%SLOPE ( INFILE=sshikh.RTD_MOU, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=RTD_MOU , OUT=RTD_MOU_L15);
+%SLOPE ( INFILE=sshikh.RTD_MOU, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=RTD_MOU , OUT=RTD_MOU_M2);
+%SLOPE ( INFILE=sshikh.RTD_MOU, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=RTD_MOU , OUT=RTD_MOU_L37);
+%SD_4DB_L36(RTD_MOU,INFILE=sshikh.RTD_MOU);
+%SD_3DB_L36(RTD_MOU,INFILE=sshikh.RTD_MOU);
+%DELETE_FILE(sshikh,RTD_MOU);
+
+/*CUST_REV*/
+
+%create_file(CUST_REV,OUTFILE=sshikh.REV);               
+%SUM_VINTAGE(REV,INFILE=sshikh.REV);
+%PCT_CHG(REV);
+%SUM("&Last4days"d, &run_date,REV_L4,INFILE=sshikh.REV);
+%SUM("&Last7days"d, &run_date,REV_L7,INFILE=sshikh.REV);
+%SUM("&Last15days"d, &run_date,REV_L15,INFILE=sshikh.REV);
+%SUM("&Last37days"d, "&Last8days"d,REV_M2,INFILE=sshikh.REV);
+%SUM("&Last37days"d, &run_date,REV_L37,INFILE=sshikh.REV);
+%SLOPE ( INFILE=sshikh.REV, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=REV , OUT=REV_L7);
+%SLOPE ( INFILE=sshikh.REV, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=REV , OUT=REV_L15);
+%SLOPE ( INFILE=sshikh.REV, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=REV , OUT=REV_L37);
+%SLOPE ( INFILE=sshikh.REV, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=REV , OUT=REV_M2);
+
+%SD_4DB_L36(REV,INFILE=sshikh.REV);
+%SD_3DB_L36(REV,INFILE=sshikh.REV);
+%DELETE_FILE(sshikh,REV);
+
+/***********************************************/
+
+/*MAIN BALANCE*/
+%create_file(MAIN_BAL_INR,OUTFILE=sshikh.MAIN_BAL);
+%SUM("&Last4days"d, &run_date,MBL_L4,INFILE=sshikh.MAIN_BAL);
+%SUM("&Last7days"d, &run_date,MBL_L7,INFILE=sshikh.MAIN_BAL);
+%SUM("&Last15days"d, &run_date,MBL_L15,INFILE=sshikh.MAIN_BAL);
+%SUM("&Last37days"d, "&Last8days"d,MBL_M2,INFILE=sshikh.MAIN_BAL);
+%SUM("&Last37days"d, &run_date,MBL_L37,INFILE=sshikh.MAIN_BAL);
+%SLOPE ( INFILE=sshikh.MAIN_BAL, DATE1="&Last7days."D ,DATE2= &run_date.  ,  ABT_VAR=MBL , OUT=MBL_L7);
+%SLOPE ( INFILE=sshikh.MAIN_BAL, DATE1="&Last15days."D ,DATE2= &run_date.  , ABT_VAR=MBL , OUT=MBL_L15);
+%SLOPE ( INFILE=sshikh.MAIN_BAL, DATE1="&Last37days."D ,DATE2= &run_date.  , ABT_VAR=MBL , OUT=MBL_L37);
+%SLOPE ( INFILE=sshikh.MAIN_BAL, DATE1="&Last37days."D ,DATE2="&Last8days"d , ABT_VAR=MBL , OUT=MBL_M2);
+
+%SD_4DB_L36(MBL,INFILE=sshikh.MAIN_BAL);
+%SD_3DB_L36(MBL,INFILE=sshikh.MAIN_BAL);
+%DELETE_FILE(sshikh,MAIN_BAL);
+
+
+/* DAYS_INSTANCES*/
+
+%create_flag_file( ROAMING_FLAG,OUTFILE=sshikh.ROAMING);
+%CNT("&last4days."d, &run_date,RMG_INS_L4,INFILE=sshikh.ROAMING);
+%CNT("&last7days."d, &run_date,RMG_INS_L7,INFILE=sshikh.ROAMING);
+%CNT("&last14days."d, &run_date,RMG_INS_L14,INFILE=sshikh.ROAMING);
+%CNT("&Last37days"d, "&Last8days"d,RMG_INS_M2,INFILE=sshikh.ROAMING);
+%CNT("&last37days."d, &run_date,RMG_INS_L37,INFILE=sshikh.ROAMING);
+%DELETE_FILE(sshikh,ROAMING);
+
+/*Sum/Average Recharge and High Recharge variables*/
+
+
+%CREATE_RECHARGE_FILE(OUTFILE=sshikh.RECHARGE,EVENTDATE=EVENT_DT) ;
+%RCHRG_VALUE (OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,EVENTDATE=EVENT_DT);
+%RCHRG_VALUE (OUT=L67 , DATE1="&LAST67DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L7 , DATE1="&LAST7DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE, AMOUNT=30,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L15 , DATE1="&LAST15DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=30,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=30,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L7 , DATE1="&LAST7DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=50,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L15 , DATE1="&LAST15DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=50,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=50,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L7 , DATE1="&LAST7DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=100,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L15 , DATE1="&LAST15DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=100,EVENTDATE=EVENT_DT);
+%HIGHRECHARGE(OUT=L37 , DATE1="&LAST37DAYS."D  , DATE2= &RUN_DATE.,INFILE=sshikh.RECHARGE,AMOUNT=100,EVENTDATE=EVENT_DT);
+%DELETE_FILE(sshikh,RECHARGE);
+
+
+
+/*???????????????????????????????????????????????????????????????????????????*/
+/*???????????????? Count of outgoing home & revenue SMS count ???????????????*/
+/*???????????????????????????????????????????????????????????????????????????*/
+
+
+
+
+PROC DATASETS LIB=WORK KILL;
+RUN;
+
+
+
+%MACRO create_file;
+     PROC SQL;
+           CREATE TABLE TEMP AS
+                SELECT     SUBS_KEY,
+                     EVENT_DT,
+                     SUM(TOT_IC_SMS_CNT,0) AS TOT_IC_SMS_CNT,
+                     SUM(TOT_OG_SMS_HOME_CNT,0) AS TOT_OG_SMS_HOME_CNT,
+                     SUM(TOT_OG_SMS_ROAMING_CNT,0) AS TOT_OG_SMS_ROAMING_CNT
+                FROM &rawdata. 
+                     GROUP BY SUBS_KEY
+                           ORDER BY SUBS_KEY;
+     QUIT;
+%MEND;
+
+%MACRO SMS_CNT(date1, date2, out);
+
+
+     PROC SQL;
+           CREATE TABLE TEM1 AS 
+                SELECT 
+                     SUBS_KEY,
+                     SUM(TOT_IC_SMS_CNT) AS CNT_SMS_IC_ALL_&out.,
+                     SUM(SUM(TOT_OG_SMS_HOME_CNT,TOT_OG_SMS_ROAMING_CNT)) AS CNT_SMS_OG_ALL_&out.,
+                     SUM(SUM(TOT_OG_SMS_HOME_CNT,TOT_OG_SMS_ROAMING_CNT,TOT_IC_SMS_CNT)) AS CNT_SMS_TOT_ALL_&out.
+                FROM TEMP
+                           WHERE EVENT_DT BETWEEN &date1. and &date2.
+                     GROUP BY SUBS_KEY;
+     quit;
+
+     PROC SQL;
+           CREATE TABLE abt1 AS 
+                SELECT     T1.*,
+                     T2.CNT_SMS_OG_ALL_&out.,
+                     T2.CNT_SMS_TOT_ALL_&out.
+                FROM &base. T1  LEFT JOIN TEM1 T2 ON (T1.SUBS_KEY=T2.SUBS_KEY);
+     QUIT;
+
+     data &base.;
+           set abt1;
+     run;
+
+     proc datasets lib=work nolist;
+           delete TEM1;
+     quit;
+
+%MEND;
+
+%create_file;
+%SMS_CNT("&last7days"d, &run_date., L7);
+%SMS_CNT("&last15days"d, &run_date., L15);
+%SMS_CNT("&last37days"d, &run_date., L37);
+
+
+/*??????? Days since last recharge ?????*/
+
+
+PROC SQL;
+   CREATE TABLE WORK.RCHRG_day AS 
+   SELECT  
+          T1.SUBS_KEY, 
+          T1. EVENT_DT,  
+      SUM(T1.RCHG_CNT_PAPER ,T1.RCHG_CNT_V_TOP_UP,0) AS CNT_TOT_RCHRG
+      FROM &rawdata T1  WHERE  (("&Last67days"D <= EVENT_DT <= &run_date ) and (calculated CNT_TOT_RCHRG ne 0 or .))
+order by SUBS_KEY, EVENT_DT;
+quit;
+DATA work.day_last_rchg;
+SET work.RCHRG_day ;
+BY  SUBS_KEY ; 
+  IF last.SUBS_KEY;    
+run;
+
+data work.day_last_rchg;
+set work.day_last_rchg;
+DS_RCH_L67 = intck ('day', EVENT_DT,&run_date );
+run;
+
+PROC SQL;
+   CREATE TABLE ABT_DS_RCH (compress=binary) AS 
+   SELECT t1.*,
+             t2.DS_RCH_L67             
+      FROM &base. t1 LEFT JOIN WORK.DAY_LAST_RCHG t2 ON (t1.SUBS_KEY = t2.SUBS_KEY)
+order by t1.subs_key;
+QUIT;
+
+data &base. (compress=binary);
+  set ABT_DS_RCH;
+  if DS_RCH_L67 = . then DS_RCH_L67 = 99;
+  run;
+

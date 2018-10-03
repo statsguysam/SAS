@@ -1,0 +1,107 @@
+
+%let raw_data = &&Interaction_data._1;
+ods html body='/home/sassrv/UW_Binning.html';
+%macro bin(var);
+
+proc univariate data=&raw_data.;
+     var &var.;
+     output out=&var. pctlpts= 10 to 100 by 10 pctlpre=P_ ;
+run;
+
+data _null_;
+     set &var.;
+     call symput('P_10',compress(round((P_10),0.001)));
+     call symput('P_20',compress(round((P_20),0.001)));
+     call symput('P_30',compress(round((P_30),0.001)));
+     call symput('P_40',compress(round((P_40),0.001)));
+     call symput('P_50',compress(round((P_50),0.001)));
+     call symput('P_60',compress(round((P_60),0.001)));
+     call symput('P_70',compress(round((P_70),0.001)));
+     call symput('P_80',compress(round((P_80),0.001)));
+     call symput('P_90',compress(round((P_90),0.001)));
+     call symput('P_100',compress(round((P_100),0.001)));
+run;
+%put &P_40.;
+
+
+data test_&var.;     
+     set &raw_data.;
+     format &var._bin $50.;
+     if &var. = . then &var._bin = "NA";else
+     if &var. <= &P_10. then do; 
+           &var._bin = "[<&P_10.]";
+           bin = 1;end;else
+     if &var. > &P_10. and &var.<= &P_20. then do; 
+           &var._bin = "(&P_10.,&P_20.]";
+           bin = 2;end;else
+     if &var. > &P_20. and &var.<= &P_30. then do;
+           &var._bin = "(&P_20.,&P_30.]";
+           bin = 3;end;else
+     if &var. > &P_30. and &var.<= &P_40. then do;
+           &var._bin = "(&P_30.,&P_40.]";
+           bin = 4;end;else
+     if &var. > &P_40. and &var.<= &P_50. then do;
+           &var._bin = "(&P_40.,&P_50.]";
+           bin = 5;end;else
+     if &var. > &P_50. and &var.<= &P_60. then do;
+           &var._bin = "(&P_50.,&P_60.]";
+           bin = 6;end;else
+     if &var. > &P_60. and &var.<= &P_70. then do;
+           &var._bin = "(&P_60.,&P_70.]";
+           bin = 7;end;else
+     if &var. > &P_70. and &var.<= &P_80. then do;
+           &var._bin = "(&P_70.,&P_80.]";
+           bin = 8;end;else
+     if &var. > &P_80. and &var.<= &P_90. then do;
+           &var._bin = "(&P_80.,&P_90.]";
+           bin = 9;end;else
+     if &var. > &P_90. then do;
+           &var._bin = "(>&P_90.)";
+           bin = 10;end;
+run;
+
+proc sql;
+     create table out_&var. as
+     select distinct &var._bin , bin, count(distinct subs_key) as subs, sum(target) as resp
+     from test_&var. as a
+     group by &var._bin, bin
+     order by bin;
+quit;
+
+proc sql;
+     select sum(subs) into: sum_subs from out_&var.;
+quit;
+
+data out_&var.;
+     set out_&var.;
+     bin1 = bin||". "||&var._bin;
+     format subs_prcnt  percent8.2;
+     format churner_prcnt  percent8.2;
+     subs_prcnt = subs/&sum_subs.;
+     churner_prcnt = resp/subs;
+run;
+title &var.;
+proc sgplot data=out_&var.;
+  vbar bin1 / response=subs_prcnt stat=mean nostatlabel;
+  vline bin1 / response=churner_prcnt stat=mean nostatlabel y2axis
+                lineattrs=(thickness=10) transparency=0.3;
+  xaxis display=(nolabel);
+  yaxis grid offsetmin=0;
+run;
+
+%mend;
+%bin(CHG_REV_L15_M2);
+%bin(SLP_OG_REV_ALL_L45);
+%bin(SUM_REV_L45);
+
+%bin(MAX_MBL_L4);
+%bin(CNT_RCH_VAL_GT_30_L7);
+%bin(CNT_DEC_INS_L4);
+
+%bin(SUM_OG_IC_MOU_ALL_L4);
+%bin(CNT_OG_UNQ_ANY_L15);
+%bin(RAT_MAX_CNT_DAY_NOMOU_L45);
+
+%bin(SLP_STD_OG_REV_L15_3);
+%bin(RAT_CUST_REV_BY_MOU_L15);
+

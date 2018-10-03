@@ -1,0 +1,48 @@
+/*Scoring*/
+%MACRO RNKORD(INDATA,ORDVAR,FLAGVAR);
+DATA TEMP1; SET &INDATA. (KEEP = &ORDVAR. &FLAGVAR.); RUN;
+PROC MEANS DATA=TEMP1 SUM;
+VAR &ORDVAR.;
+RUN;
+
+PROC SORT DATA=TEMP1; BY DESCENDING &ORDVAR.; RUN;
+DATA TEMP2 (DROP = I COUNT);
+SET TEMP1 NOBS = SIZE;
+COUNT + 1;
+DO I = 1 TO 100;
+  IF (I-1) * (SIZE/100) < COUNT <= I * (SIZE/100) THEN DECILE = I;
+END;
+RUN;
+
+PROC FREQ DATA = TEMP2 noprint FORMCHAR = '           ';
+TABLES DECILE * TARGET / out=temp NOCUM NOROW NOCOL NOPERCENT;
+RUN;
+
+data temp1(keep=decile cum_count1);
+set temp(where=(target=1));
+cum_count1=sum(count,cum_count1,0);
+retain cum_count1;
+run;
+data temp0(keep=decile cum_count0);
+set temp(where=(target=0));
+cum_count0=sum(count,cum_count0,0);
+retain cum_count0;
+run;
+proc sql;
+select MAX(cum_count1) into :total from temp1;
+run;
+data final;
+merge temp0 (in=a) temp1(in=b);
+by decile;
+cum_count_tot=cum_count1+cum_count0;
+HIT_RATE=cum_count1/cum_count_tot;
+PENETRATION=cum_count1/&total.;
+baseline=hit_rate+penetration;
+run;
+proc print data=final;run;
+
+
+%MEND RNKORD;
+
+
+%RNKORD(DATA_ABT,PROB,TARGET);
