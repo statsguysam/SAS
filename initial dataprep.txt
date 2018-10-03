@@ -1,0 +1,91 @@
+data train1;
+
+set train;
+
+if Loan_Status='Y' then Loan_Status=1;
+
+if Loan_Status='N' then Loan_Status=0;
+
+if Gender='Male' then Gender=1;
+
+if Gender='Female' then Gender=0;
+
+if Married='Yes' then Married=1;
+
+if Married='No' then Married=0;
+
+if Self_Employed='Yes' then Self_Employed=1;
+
+if Self_Employed='No' then Self_Employed=0;
+
+if Education='Graduate' then Education=1;
+
+if Education='Not Graduate' then Education=0;
+
+if Dependents='3+' then Dependents=3;
+
+if Credit_History='Y' then Credit_History=1;
+
+if Credit_History='N' then Credit_History=0;
+
+if Property_Area='Urban' then Property_Area=1;
+
+if Property_Area='Semiurban' then Property_Area=2;
+
+if Property_Area='Rural' then Property_Area=3;
+
+Loan_Status_int=input(Loan_Status,12.);
+
+Gender_int=input(Gender,12.);
+
+Married_int=input(Married,12.);
+
+Self_Employed_int=input(Self_Employed,12.);
+
+Education_int=input(Education,12.);
+
+Dependents_int=input(Dependents,12.);
+
+Credit_History_int=input(Credit_History,12.);
+
+Property_Area_int=input(Property_Area,12.);
+
+ApplicantIncome_int=input(ApplicantIncome,Comma12.);
+
+CoapplicantIncome_int=input(CoapplicantIncome,Comma12.);
+
+LoanAmount_int=input(LoanAmount,Comma12.);
+
+Loan_Amount_Term_int=input(Loan_Amount_Term,Comma12.);
+
+ 
+
+drop Loan_Status
+
+Gender
+
+Married
+
+Self_Employed
+
+Education
+
+Dependents
+
+Credit_History
+
+Property_Area
+
+ApplicantIncome
+
+Loan_Amount_Term
+
+CoapplicantIncome
+
+LoanAmount
+
+;
+
+ 
+
+run;
