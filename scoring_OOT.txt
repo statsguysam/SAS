@@ -1,0 +1,677 @@
+filename score1 '/sasdata/SAS_MINING/EminerProjects/Data_DIU_MH_PII/Workspaces/EMWS2/Score/OPTIMIZEDCODE.sas ';
+
+ 
+
+data score;
+
+set shimoh2.DATA_DIU_MH_ABT_ALL_FINAL_OOT;
+
+%include score1;
+
+run;
+
+ 
+
+ 
+
+%MACRO RNKORD(INDATA,ORDVAR,FLAGVAR);
+
+ 
+
+DATA TEMP1; SET &INDATA. (KEEP =subs_key &ORDVAR. &FLAGVAR.); RUN;
+
+PROC MEANS DATA=TEMP1 SUM;
+
+VAR &ORDVAR.;
+
+RUN;
+
+ 
+
+PROC SORT DATA=TEMP1; BY DESCENDING &ORDVAR.; RUN;
+
+DATA TEMP2 (DROP = I COUNT);
+
+SET TEMP1 NOBS = SIZE;
+
+COUNT + 1;
+
+DO I = 1 TO 100;
+
+  IF (I-1) * (SIZE/100) < COUNT <= I * (SIZE/100) THEN DECILE = I;
+
+END;
+
+RUN;
+
+ 
+
+PROC FREQ DATA = TEMP2 FORMCHAR = '           ';
+
+TABLES DECILE * &FLAGVAR. /NOCUM NOROW NOCOL NOPERCENT;
+
+RUN;
+
+ 
+
+%MEND RNKORD;
+
+ 
+
+%RNKORD(score,P_target1,TARGET);
+
+ 
+
+nn
+
+ 
+
+ 
+
+ 
+
+data DATA_DIU_MH_ABT_ALL_FINAL_OOT;
+
+set shimoh2.DATA_DIU_MH_ABT_ALL_FINAL_OOT;
+
+*------------------------------------------------------------*;
+
+* EM SCORE CODE;
+
+*------------------------------------------------------------*;
+
+*------------------------------------------------------------*;
+
+* TOOL: Input Data Source;
+
+* TYPE: SAMPLE;
+
+* NODE: Ids;
+
+*------------------------------------------------------------*;
+
+*------------------------------------------------------------*;
+
+* TOOL: Neural;
+
+* TYPE: MODEL;
+
+* NODE: Neural;
+
+*------------------------------------------------------------*;
+
+***********************************;
+
+*** Begin Scoring Code for Neural;
+
+***********************************;
+
+DROP _DM_BAD _EPS _NOCL_ _MAX_ _MAXP_ _SUM_ _NTRIALS;
+
+_DM_BAD = 0;
+
+_NOCL_ = .;
+
+_MAX_ = .;
+
+_MAXP_ = .;
+
+_SUM_ = .;
+
+_NTRIALS = .;
+
+_EPS =                1E-10;
+
+LENGTH _WARN_ $4
+
+;
+
+      label S_AVG_RCH_VAL_L37 = 'Standard: AVG_RCH_VAL_L37' ;
+
+ 
+
+      label S_CHG_USG_MB_L7_M2 = 'Standard: CHG_USG_MB_L7_M2' ;
+
+ 
+
+      label S_CNT_DATA_INS_L67 = 'Standard: CNT_DATA_INS_L67' ;
+
+ 
+
+      label S_CNT_RCH_VAL_GT_100_L7 = 'Standard: CNT_RCH_VAL_GT_100_L7' ;
+
+ 
+
+      label S_SD_USG_MB_4DB_L36 = 'Standard: SD_USG_MB_4DB_L36' ;
+
+ 
+
+      label S_SLP_DATA_TOT_DUR_L15 = 'Standard: SLP_DATA_TOT_DUR_L15' ;
+
+ 
+
+      label S_SLP_USG_MB_3DB_L60 = 'Standard: SLP_USG_MB_3DB_L60' ;
+
+ 
+
+      label H11 = 'Hidden: H1=1' ;
+
+ 
+
+      label H12 = 'Hidden: H1=2' ;
+
+ 
+
+      label H13 = 'Hidden: H1=3' ;
+
+ 
+
+      label I_TARGET = 'Into: TARGET' ;
+
+ 
+
+      label U_TARGET = 'Unnormalized Into: TARGET' ;
+
+ 
+
+      label P_TARGET1 = 'Predicted: TARGET=1' ;
+
+ 
+
+      label P_TARGET0 = 'Predicted: TARGET=0' ;
+
+ 
+
+      label  _WARN_ = "Warnings";
+
+ 
+
+*** *************************;
+
+*** Checking missing input Interval
+
+*** *************************;
+
+ 
+
+IF NMISS(
+
+   AVG_RCH_VAL_L37 ,
+
+   CHG_USG_MB_L7_M2 ,
+
+   CNT_DATA_INS_L67 ,
+
+   CNT_RCH_VAL_GT_100_L7 ,
+
+   SD_USG_MB_4DB_L36 ,
+
+   SLP_DATA_TOT_DUR_L15 ,
+
+   SLP_USG_MB_3DB_L60   ) THEN DO;
+
+   SUBSTR(_WARN_, 1, 1) = 'M';
+
+ 
+
+   _DM_BAD = 1;
+
+END;
+
+*** *************************;
+
+*** Writing the Node intvl ;
+
+*** *************************;
+
+IF _DM_BAD EQ 0 THEN DO;
+
+   S_AVG_RCH_VAL_L37  =    -1.31736600607924 +     0.00674731200924 *
+
+        AVG_RCH_VAL_L37 ;
+
+   S_CHG_USG_MB_L7_M2  =    -0.03539676021702 +     0.79686053037128 *
+
+        CHG_USG_MB_L7_M2 ;
+
+   S_CNT_DATA_INS_L67  =    -3.79191660206149 +     0.07123754094438 *
+
+        CNT_DATA_INS_L67 ;
+
+   S_CNT_RCH_VAL_GT_100_L7  =    -0.46241664513267 +     2.42990953922016 *
+
+        CNT_RCH_VAL_GT_100_L7 ;
+
+   S_SD_USG_MB_4DB_L36  =    -1.07119190797278 +      0.0093941288143 *
+
+        SD_USG_MB_4DB_L36 ;
+
+   S_SLP_DATA_TOT_DUR_L15  =     0.08476485315158 +     0.00059893919562 *
+
+        SLP_DATA_TOT_DUR_L15 ;
+
+   S_SLP_USG_MB_3DB_L60  =    -0.18520137868231 +     0.06838670102304 *
+
+        SLP_USG_MB_3DB_L60 ;
+
+END;
+
+ELSE DO;
+
+   IF MISSING( AVG_RCH_VAL_L37 ) THEN S_AVG_RCH_VAL_L37  = . ;
+
+   ELSE S_AVG_RCH_VAL_L37  =    -1.31736600607924 +     0.00674731200924 *
+
+        AVG_RCH_VAL_L37 ;
+
+   IF MISSING( CHG_USG_MB_L7_M2 ) THEN S_CHG_USG_MB_L7_M2  = . ;
+
+   ELSE S_CHG_USG_MB_L7_M2  =    -0.03539676021702 +     0.79686053037128 *
+
+        CHG_USG_MB_L7_M2 ;
+
+   IF MISSING( CNT_DATA_INS_L67 ) THEN S_CNT_DATA_INS_L67  = . ;
+
+   ELSE S_CNT_DATA_INS_L67  =    -3.79191660206149 +     0.07123754094438 *
+
+        CNT_DATA_INS_L67 ;
+
+   IF MISSING( CNT_RCH_VAL_GT_100_L7 ) THEN S_CNT_RCH_VAL_GT_100_L7  = . ;
+
+   ELSE S_CNT_RCH_VAL_GT_100_L7
+
+          =    -0.46241664513267 +     2.42990953922016 *
+
+        CNT_RCH_VAL_GT_100_L7 ;
+
+   IF MISSING( SD_USG_MB_4DB_L36 ) THEN S_SD_USG_MB_4DB_L36  = . ;
+
+   ELSE S_SD_USG_MB_4DB_L36  =    -1.07119190797278 +      0.0093941288143 *
+
+        SD_USG_MB_4DB_L36 ;
+
+   IF MISSING( SLP_DATA_TOT_DUR_L15 ) THEN S_SLP_DATA_TOT_DUR_L15  = . ;
+
+   ELSE S_SLP_DATA_TOT_DUR_L15
+
+          =     0.08476485315158 +     0.00059893919562 * SLP_DATA_TOT_DUR_L15
+
+         ;
+
+   IF MISSING( SLP_USG_MB_3DB_L60 ) THEN S_SLP_USG_MB_3DB_L60  = . ;
+
+   ELSE S_SLP_USG_MB_3DB_L60  =    -0.18520137868231 +     0.06838670102304 *
+
+        SLP_USG_MB_3DB_L60 ;
+
+END;
+
+*** *************************;
+
+*** Writing the Node H1 ;
+
+*** *************************;
+
+IF _DM_BAD EQ 0 THEN DO;
+
+   H11  =    -0.08393126036294 * S_AVG_RCH_VAL_L37  +     2.80410833382898 *
+
+        S_CHG_USG_MB_L7_M2  +    -0.25855729899717 * S_CNT_DATA_INS_L67
+
+          +     -0.1642938310143 * S_CNT_RCH_VAL_GT_100_L7
+
+          +    -0.11767260634183 * S_SD_USG_MB_4DB_L36
+
+          +    -0.27509199064689 * S_SLP_DATA_TOT_DUR_L15
+
+          +    -0.26500892013528 * S_SLP_USG_MB_3DB_L60 ;
+
+   H12  =    -0.03504489104404 * S_AVG_RCH_VAL_L37  +    -0.22548741530407 *
+
+        S_CHG_USG_MB_L7_M2  +    -0.04308059735114 * S_CNT_DATA_INS_L67
+
+          +    -0.00360045712577 * S_CNT_RCH_VAL_GT_100_L7
+
+          +     0.02407870036278 * S_SD_USG_MB_4DB_L36
+
+          +    -0.04719082467889 * S_SLP_DATA_TOT_DUR_L15
+
+          +     -0.0444740696794 * S_SLP_USG_MB_3DB_L60 ;
+
+   H13  =     -0.3347940987483 * S_AVG_RCH_VAL_L37  +     0.96837145074506 *
+
+        S_CHG_USG_MB_L7_M2  +     6.30121718194578 * S_CNT_DATA_INS_L67
+
+          +     10.8941493022317 * S_CNT_RCH_VAL_GT_100_L7
+
+          +    -0.55071131412504 * S_SD_USG_MB_4DB_L36
+
+          +    -0.14572667247748 * S_SLP_DATA_TOT_DUR_L15
+
+          +     -0.6888475414077 * S_SLP_USG_MB_3DB_L60 ;
+
+   H11  =     1.94145047043328 + H11 ;
+
+   H12  =     0.50380512846513 + H12 ;
+
+   H13  =    -1.53555369637641 + H13 ;
+
+   H11  = TANH(H11 );
+
+   H12  = TANH(H12 );
+
+   H13  = TANH(H13 );
+
+END;
+
+ELSE DO;
+
+   H11  = .;
+
+   H12  = .;
+
+   H13  = .;
+
+END;
+
+*** *************************;
+
+*** Writing the Node TARGET ;
+
+*** *************************;
+
+IF _DM_BAD EQ 0 THEN DO;
+
+   P_TARGET1  =    -1.29444553861709 * H11  +     12.0301305782289 * H12
+
+          +    -0.62735623398437 * H13 ;
+
+   P_TARGET1  =    -6.79898545380122 + P_TARGET1 ;
+
+   P_TARGET0  = 0;
+
+   _MAX_ = MAX (P_TARGET1 , P_TARGET0 );
+
+   _SUM_ = 0.;
+
+   P_TARGET1  = EXP(P_TARGET1  - _MAX_);
+
+   _SUM_ = _SUM_ + P_TARGET1 ;
+
+   P_TARGET0  = EXP(P_TARGET0  - _MAX_);
+
+   _SUM_ = _SUM_ + P_TARGET0 ;
+
+   P_TARGET1  = P_TARGET1  / _SUM_;
+
+   P_TARGET0  = P_TARGET0  / _SUM_;
+
+END;
+
+ELSE DO;
+
+   P_TARGET1  = .;
+
+   P_TARGET0  = .;
+
+END;
+
+IF _DM_BAD EQ 1 THEN DO;
+
+   P_TARGET1  =              0.26433;
+
+   P_TARGET0  =              0.73567;
+
+END;
+
+*** *************************;
+
+*** Writing the I_TARGET  AND U_TARGET ;
+
+*** *************************;
+
+_MAXP_ = P_TARGET1 ;
+
+I_TARGET  = "1           " ;
+
+U_TARGET  =                    1;
+
+IF( _MAXP_ LT P_TARGET0  ) THEN DO;
+
+   _MAXP_ = P_TARGET0 ;
+
+   I_TARGET  = "0           " ;
+
+   U_TARGET  =                    0;
+
+END;
+
+********************************;
+
+*** End Scoring Code for Neural;
+
+********************************;
+
+drop
+
+H11
+
+H12
+
+H13
+
+;
+
+drop S_:;
+
+*------------------------------------------------------------*;
+
+* TOOL: Score Node;
+
+* TYPE: ASSESS;
+
+* NODE: Score;
+
+*------------------------------------------------------------*;
+
+*------------------------------------------------------------*;
+
+* Score: Creating Fixed Names;
+
+*------------------------------------------------------------*;
+
+LABEL EM_EVENTPROBABILITY = 'Probability for level 1 of TARGET';
+
+EM_EVENTPROBABILITY = P_TARGET1;
+
+LABEL EM_PROBABILITY = 'Probability of Classification';
+
+EM_PROBABILITY =
+
+max(
+
+P_TARGET1
+
+,
+
+P_TARGET0
+
+);
+
+LENGTH EM_CLASSIFICATION $%dmnorlen;
+
+LABEL EM_CLASSIFICATION = "Prediction for TARGET";
+
+EM_CLASSIFICATION = I_TARGET;
+
+run;
+
+ 
+
+ 
+
+%MACRO RNKORD(INDATA,ORDVAR,FLAGVAR);
+
+ 
+
+DATA TEMP1; SET &INDATA. (KEEP = &ORDVAR. &FLAGVAR.); RUN;
+
+PROC MEANS DATA=TEMP1 SUM;
+
+VAR &ORDVAR.;
+
+RUN;
+
+ 
+
+PROC SORT DATA=TEMP1; BY DESCENDING &ORDVAR.; RUN;
+
+DATA TEMP2 (DROP = I COUNT);
+
+SET TEMP1 NOBS = SIZE;
+
+COUNT + 1;
+
+DO I = 1 TO 100;
+
+  IF (I-1) * (SIZE/100) < COUNT <= I * (SIZE/100) THEN DECILE = I;
+
+END;
+
+RUN;
+
+ 
+
+PROC FREQ DATA = TEMP2 FORMCHAR = '           ';
+
+TABLES DECILE * &FLAGVAR. /NOCUM NOROW NOCOL NOPERCENT;
+
+RUN;
+
+ 
+
+%MEND RNKORD;
+
+ 
+
+%RNKORD(DATA_DIU_MH_ABT_ALL_FINAL_OOT,P_target1,TARGET);
+
+ 
+
+ 
+
+Lr
+
+libname shimoh2"/sasdata3/SAS_MINING/egusers/shimoh";
+
+ods html body= '/home/sassrv/DATA_DIU_HP.html';
+
+ 
+
+%LET VARLIST=
+
+CHG_USG_MB_L7_M2
+
+CNT_DATA_INS_L67
+
+CNT_RCH_VAL_GT_100_L7
+
+SD_USG_MB_4DB_L36
+
+AVG_RCH_VAL_L37
+
+SLP_DATA_TOT_DUR_L15
+
+SLP_USG_MB_3DB_L60
+
+;
+
+ 
+
+/* PROC Regression program to know Colliearity statistics, Condition Index,  and VIF  */
+
+PROC REG DATA=SHIMOH2.DATA_DIU_MH_ABT_ALL_FINAL_OOT;
+
+MODEL TARGET = &VARLIST /VIF COLLIN;
+
+RUN;
+
+ 
+
+   
+
+/* Program to run logistic regression to obtain realisation on predictor variables  */
+
+ 
+
+PROC LOGISTIC DATA=SHIMOH2.DATA_DIU_MH_ABT_ALL_FINAL_OOT DESCENDING ;
+
+MODEL TARGET = &VARLIST /LACKFIT;
+
+OUTPUT OUT =PB_DIU_NEW_DEFN XBETA = COEFF STDXBETA = STDCOEFF PREDICTED = PROB;
+
+RUN;
+
+ 
+
+%MACRO RNKORD(INDATA,ORDVAR,FLAGVAR);
+
+ 
+
+DATA TEMP1; SET &INDATA. (KEEP = &ORDVAR. &FLAGVAR.); RUN;
+
+PROC MEANS DATA=TEMP1 SUM;
+
+VAR &ORDVAR.;
+
+RUN;
+
+ 
+
+PROC SORT DATA=TEMP1; BY DESCENDING &ORDVAR.; RUN;
+
+DATA TEMP2 (DROP = I COUNT);
+
+SET TEMP1 NOBS = SIZE;
+
+COUNT + 1;
+
+DO I = 1 TO 100;
+
+  IF (I-1) * (SIZE/100) < COUNT <= I * (SIZE/100) THEN DECILE = I;
+
+END;
+
+RUN;
+
+ 
+
+PROC FREQ DATA = TEMP2 FORMCHAR = '           ';
+
+TABLES DECILE * &FLAGVAR. /NOCUM NOROW NOCOL NOPERCENT;
+
+RUN;
+
+ 
+
+%MEND RNKORD;
+
+ 
+
+%RNKORD(PB_DIU_NEW_DEFN,PROB,TARGET);
+
+ 
+
+options pagesize=54 linesize=96;
+
+ 
+
+/*PEARSON CORRELATION COEFFICIENT*/
+
+ 
+
+PROC CORR DATA=SHIMOH2.DATA_DIU_MH_ABT_ALL_FINAL_OOT  NOPROB;
+
+var &VARLIST;
+
+RUN;
